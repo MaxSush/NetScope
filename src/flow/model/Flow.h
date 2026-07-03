@@ -2,8 +2,8 @@
 
 #include "FlowStatistics.h"
 #include "FlowKey.h"
+#include <shared/NetworkEvent.h>
 #include <timer/TimeTypes.h>
-#include <shared/PacketEvent.h>
 
 #include <sys/types.h>
 
@@ -23,7 +23,7 @@ namespace netscope
 	public:
 		explicit Flow(const FlowKey& key);
 
-		void Update(const PacketEvent& event);
+		void Update(const NetworkEvent& event);
 
 		const FlowStatistics& GetStatistics() const;
 

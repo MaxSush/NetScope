@@ -11,6 +11,8 @@ namespace netscope
 		auto* queue = static_cast<EventQueue<NetworkEvent>*>(ctx);
 		auto* packet = static_cast<PacketEvent*>(data);
 
+		//TODO: appropriate conversion PacketEvent ==> NetworkEvent
+
 		NetworkEvent event{};
 		event.direction = packet->direction;
 		event.pid = packet->pid;

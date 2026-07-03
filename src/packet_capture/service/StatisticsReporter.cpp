@@ -4,7 +4,7 @@
 namespace netscope
 {
 
-	StatisticsReporter::StatisticsReporter(NetworkAggregator& aggregator, ProcessCache& m_processCache)
+	StatisticsReporter::StatisticsReporter(StatisticsAggregator& aggregator, ProcessCache& m_processCache)
 		: 
 		m_aggregator(aggregator),
 		m_processCache(m_processCache)

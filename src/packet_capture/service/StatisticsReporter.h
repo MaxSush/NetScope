@@ -1,6 +1,6 @@
 #pragma once
 
-#include "statistics/NetworkAggregator.h"
+#include "statistics/StatisticsAggregator.h"
 
 #include <ProcessCache.h>
 
@@ -9,11 +9,11 @@ namespace netscope
 	class StatisticsReporter
 	{
 	public:
-		StatisticsReporter(NetworkAggregator& aggregator, ProcessCache& m_processCache);
+		StatisticsReporter(StatisticsAggregator& aggregator, ProcessCache& m_processCache);
 
 		void Report();
 	private:
-		NetworkAggregator& m_aggregator;
+		StatisticsAggregator& m_aggregator;
 		ProcessCache& m_processCache;
 	};
 }

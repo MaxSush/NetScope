@@ -1,27 +1,24 @@
 #pragma once
 
-#include "shared/NetworkEvent.h"
+#include <dispatcher/INetworkEventProcessor.h>
 #include "NetworkStatistics.h"
-#include <event/EventQueue.h>
+
 
 #include <unordered_map>
+#include <mutex>
 
 namespace netscope
 {
-	class NetworkAggregator
+	class StatisticsAggregator : public INetworkEventProcessor
 	{
 	public:
-		explicit NetworkAggregator(EventQueue<NetworkEvent>& queue);
+		StatisticsAggregator() = default;
 
-		void Run();
-		void Stop();
+		void Process(const NetworkEvent& event) override;
 
 		std::unordered_map<uint64_t, NetworkStatistics> GetSnapshot();
 
 	private:
-		EventQueue<NetworkEvent>& m_queue;
-		bool m_running = true;
-
 		std::mutex m_mutex;
 
 		std::unordered_map<uint64_t, NetworkStatistics> m_statistics;

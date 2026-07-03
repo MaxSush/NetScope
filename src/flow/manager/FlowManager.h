@@ -1,20 +1,20 @@
 #pragma once
 
 #include "storage/FlowTable.h"
+#include <dispatcher/INetworkEventProcessor.h>
 
 namespace netscope
 {
-	class FlowManager
+	class FlowManager : public INetworkEventProcessor
 	{
 	public:
 		FlowManager() = default;
 
-		void ProcessPacket(const PacketEvent& event);
+		void Process(const NetworkEvent& event) override;
 		const FlowTable& GetTable() const;
 		void Clear();
 
 	private:
 		FlowTable m_Table;
-
 	};
 }

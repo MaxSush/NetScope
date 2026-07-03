@@ -2,7 +2,7 @@
 
 namespace netscope
 {
-	void FlowManager::ProcessPacket(const PacketEvent& event)
+	void FlowManager::Process(const NetworkEvent& event)
 	{
 		// TODO: PacketEvent
 		Endpoint source {

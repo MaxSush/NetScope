@@ -5,10 +5,12 @@ namespace netscope
 {
 	PacketCaptureService::PacketCaptureService()
 		:
-		m_aggregator(m_queue),
+		m_dispatcher(m_queue),
 		m_processCache(m_processManager),
 		m_reporter(m_aggregator, m_processCache)
 	{
+		m_dispatcher.AddProcessor(m_aggregator);
+		m_dispatcher.AddProcessor(m_flowManager);
 	}
 
 	bool PacketCaptureService::Start()
@@ -27,9 +29,9 @@ namespace netscope
 				}
 			});
 
-		m_aggregatorThread = std::thread([this]()
+		m_dispatcherThread = std::thread([this]()
 			{
-				m_aggregator.Run();
+				m_dispatcher.Run();
 			});
 
 		m_reportThread = std::thread([this]()
@@ -51,16 +53,16 @@ namespace netscope
 
 		m_queue.Shutdown();
 
-		m_aggregator.Stop();
+		m_dispatcher.Stop();
 
 		if (m_pollThread.joinable())
 		{
 			m_pollThread.join();
 		}
 
-		if (m_aggregatorThread.joinable())
+		if (m_dispatcherThread.joinable())
 		{
-			m_aggregatorThread.join();
+			m_dispatcherThread.join();
 		}
 
 		if (m_reportThread.joinable())

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "shared/NetworkEvent.h"
-#include "statistics/NetworkAggregator.h"
-#include "StatisticsReporter.h"
 #include "loader/BpfLoader.h"
+#include "dispatcher/PacketDispatcher.h"
+#include "statistics/StatisticsAggregator.h"
+#include "ProcessCache.h"
+#include "StatisticsReporter.h"
+#include <manager/FlowManager.h>
 
 #include <thread>
 
@@ -22,14 +24,18 @@ namespace netscope
 		EventQueue<NetworkEvent> m_queue;
 		BPFLoader m_loader;
 
-		NetworkAggregator m_aggregator;
+		PacketDispatcher m_dispatcher;
+
+		StatisticsAggregator m_aggregator;
+		FlowManager m_flowManager;
+
+
 		ProcessCache m_processCache;
 		ProcessManager m_processManager;
-
 		StatisticsReporter m_reporter;
 
 		std::thread m_pollThread;
-		std::thread m_aggregatorThread;
+		std::thread m_dispatcherThread;
 		std::thread m_reportThread;
 
 		bool m_running = false;

@@ -10,7 +10,7 @@ namespace netscope
 		m_lastSeen = Clock::now();
 	}
 
-	void Flow::Update(const PacketEvent& event)
+	void Flow::Update(const NetworkEvent& event)
 	{
 		m_lastSeen = Clock::now();
 

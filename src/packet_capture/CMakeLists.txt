@@ -5,9 +5,10 @@ add_subdirectory("bpf")
 
 add_library(NetScopePacketCapture STATIC
     "loader/BpfLoader.cpp"
-    "statistics/NetworkAggregator.cpp"
+    "statistics/StatisticsAggregator.cpp"
  "service/PacketCaptureService.cpp" 
- "service/StatisticsReporter.cpp")
+ "service/StatisticsReporter.cpp" "dispatcher/PacketDispatcher.cpp"
+ "dispatcher/PacketDispatcher.h" "dispatcher/INetworkEventProcessor.h")
 
 target_include_directories(NetScopePacketCapture 
     PUBLIC
