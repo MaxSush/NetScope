@@ -1,8 +1,8 @@
 #include "BpfLoader.h"
+#include "shared/PacketEvent.h"
+
 #include <bpf/libbpf.h>
-#include <shared/PacketEvent.h>
-#include <fmt/core.h>
-#include <iostream>
+
 
 namespace netscope
 {
@@ -12,7 +12,7 @@ namespace netscope
 		auto* packet = static_cast<PacketEvent*>(data);
 
 		NetworkEvent event{};
-		event.incomming = packet->direction == Direction::INCOMMING;
+		event.direction = packet->direction;
 		event.pid = packet->pid;
 		event.tid = packet->tid;
 		event.bytes = packet->bytes;

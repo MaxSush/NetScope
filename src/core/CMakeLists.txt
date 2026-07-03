@@ -4,15 +4,15 @@ add_library(NetScopeCore STATIC
    "threading/Thread.cpp"
    "event/EventBus.cpp"
    "event/EventQueue.h"
-)
+ "hash/HashUtils.h" "timer/TimeTypes.h")
 
 target_include_directories(NetScopeCore
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/src
+       ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(NetScopeCore
-    PUBLIC
+    PRIVATE
         fmt::fmt
         spdlog::spdlog
 )

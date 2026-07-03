@@ -1,10 +1,10 @@
 #pragma once
 
-#include <core/event/EventQueue.h>
-#include <shared/NetworkEvent.h>
-#include <statistics/NetworkAggregator.h>
+#include "shared/NetworkEvent.h"
+#include "statistics/NetworkAggregator.h"
 #include "StatisticsReporter.h"
-#include <loader/BpfLoader.h>
+#include "loader/BpfLoader.h"
+
 #include <thread>
 
 namespace netscope

@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <vector>
 #include <atomic>
-#include "core/logger/Logger.h"
 #include <cstdint>
 
+#include "logger/Logger.h"
 
 
 namespace netscope

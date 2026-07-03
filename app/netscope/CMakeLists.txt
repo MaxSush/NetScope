@@ -4,13 +4,14 @@ add_executable (NetScope
 
 target_include_directories(NetScope
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}
 )
 
 target_link_libraries(NetScope PRIVATE
     NetScopeCore
     NetScopeProcess
     NetScopePacketCapture
+    NetScopeFlow
 )
 
 target_compile_options(NetScope PRIVATE

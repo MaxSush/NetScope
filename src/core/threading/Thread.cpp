@@ -1,7 +1,7 @@
 
 #include "Thread.h"
 #include <stdexcept>
-#include "core/logger/Logger.h"
+#include <logger/Logger.h>
 
 namespace netscope
 {

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "core/event/EventQueue.h"
 #include "shared/NetworkEvent.h"
 #include "NetworkStatistics.h"
+#include <event/EventQueue.h>
+
 #include <unordered_map>
 
 namespace netscope

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ProcessManager.h"
-#include "ProcessInfo.h"
 #include "CachedProcess.h"
 
 #include <chrono>

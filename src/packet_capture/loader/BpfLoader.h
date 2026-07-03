@@ -1,7 +1,7 @@
 #pragma once
 
-#include <shared/NetworkEvent.h>
-#include <core/event/EventQueue.h>
+#include "shared/NetworkEvent.h"
+#include <event/EventQueue.h>
 
 struct bpf_object;
 struct ring_buffer;

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <statistics/NetworkAggregator.h>
-#include <process/ProcessCache.h>
+#include "statistics/NetworkAggregator.h"
+
+#include <ProcessCache.h>
 
 namespace netscope
 {

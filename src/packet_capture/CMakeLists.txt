@@ -6,17 +6,20 @@ add_subdirectory("bpf")
 add_library(NetScopePacketCapture STATIC
     "loader/BpfLoader.cpp"
     "statistics/NetworkAggregator.cpp"
- "service/PacketCaptureService.cpp" "service/PacketCaptureService.h" "service/StatisticsReporter.h" "service/StatisticsReporter.cpp")
+ "service/PacketCaptureService.cpp" 
+ "service/StatisticsReporter.cpp")
 
-target_include_directories(NetScopePacketCapture PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${LIBBPF_INCLUDE_DIRS}
+target_include_directories(NetScopePacketCapture 
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${LIBBPF_INCLUDE_DIRS}
 )
 
 target_link_libraries(NetScopePacketCapture
-    PUBLIC
+    PRIVATE
         NetScopeCore
         NetScopeProcess
+        NetScopeFlow
         ${LIBBPF_LIBRARIES}
 )
 

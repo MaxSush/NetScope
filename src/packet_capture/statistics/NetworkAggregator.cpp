@@ -21,7 +21,7 @@ namespace netscope
 					std::lock_guard lock(m_mutex);
 
 					auto& stats = m_statistics[event.pid];
-					if (event.incomming)
+					if (event.direction == Direction::INCOMMING)
 					{
 						stats.downloaded += event.bytes;
 					}
