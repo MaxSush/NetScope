@@ -14,7 +14,24 @@ namespace netscope
 		ICMPv6 = 58
 	};
 
-	constexpr const char* ToString(Protocol protocol)
+	inline Protocol ToProtocol(uint8_t val)
+	{
+		switch (val)
+		{
+		case 1:
+			return Protocol::ICMP;
+		case 6:
+			return Protocol::TCP;
+		case 17:
+			return Protocol::UDP;
+		case 58:
+			return Protocol::ICMPv6;
+		default:
+			return Protocol::UNKNOWN;
+		}
+	}
+
+	inline constexpr const char* ToProtocolString(Protocol protocol)
 	{
 		switch (protocol)
 		{

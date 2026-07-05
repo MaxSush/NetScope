@@ -8,7 +8,7 @@ add_library(NetScopePacketCapture STATIC
     "statistics/StatisticsAggregator.cpp"
  "service/PacketCaptureService.cpp" 
  "service/StatisticsReporter.cpp" "dispatcher/PacketDispatcher.cpp"
- "dispatcher/PacketDispatcher.h" "dispatcher/INetworkEventProcessor.h")
+ "dispatcher/PacketDispatcher.h" "dispatcher/INetworkEventProcessor.h" "service/FlowReporter.cpp")
 
 target_include_directories(NetScopePacketCapture 
     PUBLIC

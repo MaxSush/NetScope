@@ -1,7 +1,10 @@
 #include "BpfLoader.h"
+
 #include "shared/PacketEvent.h"
+#include "shared/NetworkEvent.h"
 
 #include <bpf/libbpf.h>
+#include <iostream>
 
 
 namespace netscope
@@ -14,11 +17,28 @@ namespace netscope
 		//TODO: appropriate conversion PacketEvent ==> NetworkEvent
 
 		NetworkEvent event{};
-		event.direction = packet->direction;
 		event.pid = packet->pid;
 		event.tid = packet->tid;
-		event.bytes = packet->bytes;
 
+		event.bytes = packet->bytes;
+		
+		event.protocol = ToProtocol(packet->protocol);
+		event.family = AddressFamily::IPv4;
+		event.direction = (packet->direction == 0) ? Direction::INCOMMING : Direction::OUTGOING;
+
+		event.sourcePort = packet->source_port;
+		event.destinationPort = packet->destination_port;
+
+		if (event.family == AddressFamily::IPv4)
+		{
+			event.sourceAddress = IPAddress::IPv4(packet->source.ipv4);
+			event.destinationAddress = IPAddress::IPv4(packet->destination.ipv4);
+		}
+		else
+		{
+			//event.sourceAddress = IPAddress::IPv6(packet->source.ipv6);
+			//event.destinationAddress = IPAddress::IPv6(packet->destination.ipv6);
+		}
 		queue->Push(event);
 
 		return 0;

@@ -8,6 +8,7 @@
 #include <manager/FlowManager.h>
 
 #include <thread>
+#include "FlowReporter.h"
 
 namespace netscope
 {
@@ -29,6 +30,7 @@ namespace netscope
 		StatisticsAggregator m_aggregator;
 		FlowManager m_flowManager;
 
+		FlowReporter m_flowReporter;
 
 		ProcessCache m_processCache;
 		ProcessManager m_processManager;

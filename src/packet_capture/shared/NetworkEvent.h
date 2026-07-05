@@ -8,19 +8,18 @@ namespace netscope
 {
 	struct NetworkEvent
 	{
-		IPAddress sourceAddress;
-		uint16_t sourcePort;
-
-		IPAddress destinationAddress;
-		uint16_t destinationPort;
+		pid_t pid{};
+		pid_t tid{};
+		uint64_t bytes;
 
 		Protocol protocol;
-
 		Direction direction;
+		AddressFamily family;
 
-		uint32_t bytes;
+		uint16_t sourcePort;
+		uint16_t destinationPort;
 
-		pid_t pid{};
-		uint32_t tid;
+		IPAddress sourceAddress;
+		IPAddress destinationAddress;
 	};
 }

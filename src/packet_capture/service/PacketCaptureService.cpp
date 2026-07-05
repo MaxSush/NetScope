@@ -7,7 +7,8 @@ namespace netscope
 		:
 		m_dispatcher(m_queue),
 		m_processCache(m_processManager),
-		m_reporter(m_aggregator, m_processCache)
+		m_reporter(m_aggregator, m_processCache),
+		m_flowReporter(m_flowManager)
 	{
 		m_dispatcher.AddProcessor(m_aggregator);
 		m_dispatcher.AddProcessor(m_flowManager);
@@ -41,6 +42,7 @@ namespace netscope
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 
 					m_reporter.Report();
+					m_flowReporter.Report();
 				}
 			});
 

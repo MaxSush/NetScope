@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Direction.h"
+#include <cstdint>
 
 namespace netscope
 {
@@ -11,10 +11,25 @@ namespace netscope
 
         uint64_t bytes;
 
-        Direction direction;
+        uint8_t protocol;
+        uint8_t direction;
+        uint8_t family;
 
-        uint8_t padding[7];
+        uint16_t source_port;
+        uint16_t destination_port;
+
+        union
+        {
+            uint32_t ipv4;
+            uint8_t ipv6[16];
+        } source;
+
+        union
+        {
+            uint32_t ipv4;
+            uint8_t ipv6[16];
+        } destination;
     };
 
-    static_assert(sizeof(PacketEvent) == 24);
+    static_assert(sizeof(PacketEvent) == 56);
 }

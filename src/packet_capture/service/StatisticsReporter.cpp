@@ -26,13 +26,8 @@ namespace netscope
 				<< name
 				<< "\t"
 				<< process->start_time
-				<< "\t\tUP: "
-				<< stats.uploaded
-				<< "\t\tDOWN: "
-				<< stats.downloaded
-				<< "\n";
+				<< "\t";
 		}
-		std::cout << std::endl;
 
 		m_processCache.CleanUp(std::chrono::seconds(60));
 	}
