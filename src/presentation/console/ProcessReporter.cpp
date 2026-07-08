@@ -1,6 +1,7 @@
 #include "ProcessReporter.h"
 #include <iostream>
 #include <fmt/core.h>
+#include <format/ByteFormatter.h>
 
 namespace netscope
 {
@@ -35,8 +36,9 @@ namespace netscope
 				process.processName,
 				process.activeConnections,
 				process.idleConnections,
-				process.statistics.uploadBytes,
-				process.statistics.downloadBytes);
+				ByteFormatter::Format(process.statistics.uploadBytes),
+				ByteFormatter::Format(process.statistics.downloadBytes)
+			);
 		}
 
 	}

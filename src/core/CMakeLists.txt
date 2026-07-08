@@ -4,7 +4,7 @@ add_library(NetScopeCore STATIC
    "threading/Thread.cpp"
    "event/EventBus.cpp"
    "event/EventQueue.h"
- "hash/HashUtils.h" "timer/TimeTypes.h" "Config.h")
+ "hash/HashUtils.h" "timer/TimeTypes.h" "Config.h" "format/ByteFormatter.cpp" "format/ByteFormatter.h")
 
 target_include_directories(NetScopeCore
     PUBLIC
