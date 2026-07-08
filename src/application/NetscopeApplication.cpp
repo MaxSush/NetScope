@@ -1,5 +1,6 @@
 #include "NetscopeApplication.h"
 #include <logger/Logger.h>
+#include <Config.h>
 
 
 namespace netscope
@@ -8,7 +9,10 @@ namespace netscope
 		:
 		m_capture(m_queue),
 		m_dispatcher(m_queue),
-		m_flowReporter(m_flowManager)
+		m_flowReporter(m_flowManager),
+		m_processCache(m_processManager),
+		m_processAggregator(m_processCache),
+		m_processReporter(m_processAggregator, m_flowManager)
 	{
 		m_dispatcher.AddProcessor(m_flowManager);
 	}
@@ -36,7 +40,12 @@ namespace netscope
 				{
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 
-					m_flowReporter.Report();
+					size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
+					LOG_WARN("Removed Idle Connections: {}", removed);
+					//m_processCache.CleanUp(FLOW_IDLE_TIMEOUT);
+
+					//m_flowReporter.Report();
+					m_processReporter.Report();
 				}
 			});
 

@@ -1,4 +1,5 @@
 #include "FlowManager.h"
+#include "FlowManager.h"
 
 namespace netscope
 {
@@ -20,6 +21,11 @@ namespace netscope
 		Flow& flow = m_Table.GetOrDefault(key, event.pid);
 
 		flow.Update(event);
+	}
+
+	size_t FlowManager::RemoveIdleFlows(Duration timeout)
+	{
+		return m_Table.RemoveIdleFlows(timeout);
 	}
 
 	const FlowTable& FlowManager::GetTable() const

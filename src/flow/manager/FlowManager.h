@@ -12,6 +12,9 @@ namespace netscope
 
 		void Process(const NetworkEvent& event) override;
 		const FlowTable& GetTable() const;
+
+		size_t RemoveIdleFlows(Duration timeout);
+
 		void Clear();
 
 	private:

@@ -1,6 +1,7 @@
 #include "Flow.h"
 #include "Flow.h"
 #include "Flow.h"
+#include "Flow.h"
 
 namespace netscope
 {
@@ -34,14 +35,19 @@ namespace netscope
 		return m_pid;
 	}
 
-	bool Flow::IsIdle() const
+	bool Flow::IsIdle(Duration timeout) const
 	{
-		return (GetDuration() >= FLOW_IDLE_TIMEOUT);
+		return (GetIdleTime() >= timeout);
 	}
 
-	Duration Flow::GetDuration() const
+	Duration Flow::GetIdleTime() const
 	{
-		 return m_lastSeen - m_firstSeen;
+		return Clock::now() - m_lastSeen;
+	}
+
+	Duration Flow::GetFlowLifetime() const
+	{
+		 return Clock::now() - m_lastSeen;
 	}
 
 	FlowView Flow::ToView() const

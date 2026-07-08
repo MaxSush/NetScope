@@ -11,6 +11,7 @@ namespace netscope
 	class ProcessManager
 	{
 	public:
+		ProcessManager() = default;
 		std::vector<ProcessInfo> GetProcesses() const;
 		std::optional<ProcessInfo> FindProcess(uint32_t pid) const;
 

@@ -4,6 +4,8 @@
 #include <manager/FlowManager.h>
 #include <console/FlowReporter.h>
 #include <runtime/CaptureRuntime.h>
+#include <console/ProcessReporter.h>
+
 
 
 namespace netscope
@@ -22,9 +24,14 @@ namespace netscope
 
 		PacketDispatcher m_dispatcher;
 
+		ProcessManager m_processManager;
+		ProcessCache m_processCache;
+
+		ProcessAggregator m_processAggregator;
 		FlowManager m_flowManager;
 
 		FlowReporter m_flowReporter;
+		ProcessReporter m_processReporter;
 
 		std::thread m_dispatcherThread;
 		std::thread m_reportThread;

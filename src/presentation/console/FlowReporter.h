@@ -6,7 +6,7 @@ namespace netscope
 	class FlowReporter
 	{
 	public:
-		FlowReporter(FlowManager& flowManager);
+		explicit FlowReporter(FlowManager& flowManager);
 
 		void Report();
 	private:

@@ -10,6 +10,7 @@ target_include_directories(NetScopeApplication
 
 target_link_libraries(NetScopeApplication
     PUBLIC
+    NetScopeCore
     NetScopeProcessor
     NetScopeFlow
     NetScopePresentation

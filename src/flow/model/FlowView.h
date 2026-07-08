@@ -15,5 +15,11 @@ namespace netscope
 
 		TimePoint firstSeen;
 		TimePoint lastSeen;
+		
+		inline bool IsIdle(Duration timeout) const
+		{
+			Duration duration = Clock::now() - lastSeen;
+			return (duration >= timeout);
+		}
 	};
 }

@@ -18,8 +18,6 @@ namespace netscope
 		├── Ownership
 		└── Lifetime
 	*/
-
-	constexpr auto FLOW_IDLE_TIMEOUT = std::chrono::seconds(30);
 	
 	class Flow
 	{
@@ -31,8 +29,9 @@ namespace netscope
 		const FlowStatistics& GetStatistics() const;
 
 		pid_t GetPID() const;
-		bool IsIdle() const;
-		Duration GetDuration() const;
+		bool IsIdle(Duration timeout) const;
+		Duration GetIdleTime() const;
+		Duration GetFlowLifetime() const;
 
 		FlowView ToView() const;
 	private:

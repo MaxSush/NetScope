@@ -12,6 +12,7 @@ namespace netscope
 
 	void FlowReporter::Report()
 	{
+		std::cout << "\033[2J\033[1;1H";
 		const FlowTable& flowTable = m_flowManager.GetTable();
 
 		std::vector<FlowView> flowViews = flowTable.GetSnapshot();

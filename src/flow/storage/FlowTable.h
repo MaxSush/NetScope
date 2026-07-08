@@ -23,7 +23,7 @@ namespace netscope
 		size_t Size() const;
 		bool Empty() const;
 
-		size_t RemoveIdleFlows();
+		size_t RemoveIdleFlows(Duration timeout);
 
 		std::vector<FlowView> GetSnapshot() const;
 

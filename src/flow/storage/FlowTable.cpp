@@ -52,7 +52,7 @@ namespace netscope
 		return m_flows.empty();
 	}
 
-	size_t FlowTable::RemoveIdleFlows()
+	size_t FlowTable::RemoveIdleFlows(Duration timeout)
 	{
 		size_t removed = 0;
 		{
@@ -60,7 +60,7 @@ namespace netscope
 
 			for (auto it = m_flows.begin(); it != m_flows.end(); )
 			{
-				if (it->second.IsIdle())
+				if (it->second.IsIdle(timeout))
 				{
 					it = m_flows.erase(it);
 					++removed;
