@@ -1,6 +1,8 @@
 #include "PacketDispatcher.h"
 
 #include "INetworkEventProcessor.h"
+#include <iostream>
+#include <logger/Logger.h>
 
 namespace netscope
 {
@@ -29,6 +31,7 @@ namespace netscope
 			}
 			catch (...)
 			{
+				LOG_ERROR("PacketDispatcher::Run Unkown Error occured");
 				break;
 			}
 		}

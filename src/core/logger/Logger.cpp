@@ -16,6 +16,5 @@ namespace netscope
 #endif // !NDEBUG
 
 		spdlog::set_default_logger(logger);
-
 	}
 }

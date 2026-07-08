@@ -1,10 +1,9 @@
 #include <timer/Timer.h>
 #include <logger/Logger.h>
-#include <manager/FlowManager.h>
 
 #include <thread>
 #include <iostream>
-#include <service/PacketCaptureService.h>
+#include <NetscopeApplication.h>
 
 using namespace netscope;
 
@@ -24,15 +23,16 @@ int main()
 
 	// Test
 
-	PacketCaptureService ps;
+	NetscopeApplication app;
 
-	if (ps.Start())
+	if (!app.Start())
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(60));
+		return 1;
 	}
 
+	std::this_thread::sleep_for(std::chrono::seconds(30));
 
-	ps.Stop();
+	app.Stop();
 
 	return 0;
 }

@@ -17,10 +17,9 @@ namespace netscope
 
 		FlowKey key = FlowKey::Create(source, destination, event.protocol);
 
-		Flow& flow = m_Table.GetOrDefault(key);
+		Flow& flow = m_Table.GetOrDefault(key, event.pid);
 
 		flow.Update(event);
-
 	}
 
 	const FlowTable& FlowManager::GetTable() const

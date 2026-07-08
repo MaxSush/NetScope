@@ -8,10 +8,13 @@ target_include_directories(NetScope
 )
 
 target_link_libraries(NetScope PRIVATE
+    NetScopeApplication
     NetScopeCore
-    NetScopeProcess
-    NetScopePacketCapture
     NetScopeFlow
+    NetScopePacketCapture
+    NetScopePresentation
+    NetScopeProcess
+    NetScopeProcessor
 )
 
 target_compile_options(NetScope PRIVATE

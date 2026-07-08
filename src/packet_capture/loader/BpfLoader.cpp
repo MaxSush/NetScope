@@ -4,7 +4,6 @@
 #include "shared/NetworkEvent.h"
 
 #include <bpf/libbpf.h>
-#include <iostream>
 
 
 namespace netscope

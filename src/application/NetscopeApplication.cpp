@@ -1,34 +1,29 @@
-#include "PacketCaptureService.h"
-#include <iostream>
+#include "NetscopeApplication.h"
+#include <logger/Logger.h>
+
 
 namespace netscope
 {
-	PacketCaptureService::PacketCaptureService()
+	NetscopeApplication::NetscopeApplication()
 		:
+		m_capture(m_queue),
 		m_dispatcher(m_queue),
-		m_processCache(m_processManager),
-		m_reporter(m_aggregator, m_processCache),
 		m_flowReporter(m_flowManager)
 	{
-		m_dispatcher.AddProcessor(m_aggregator);
 		m_dispatcher.AddProcessor(m_flowManager);
 	}
 
-	bool PacketCaptureService::Start()
+	bool NetscopeApplication::Start()
 	{
-		if (!m_loader.Load(m_queue))
+		if (m_capture.Start())
 		{
+			m_running = true;
+		}
+		else
+		{
+			LOG_ERROR("Error starting Capture Runtime");
 			return false;
 		}
-		m_running = true;
-
-		m_pollThread = std::thread([this]()
-			{
-				while (m_running)
-				{
-					m_loader.Poll();
-				}
-			});
 
 		m_dispatcherThread = std::thread([this]()
 			{
@@ -41,7 +36,6 @@ namespace netscope
 				{
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 
-					m_reporter.Report();
 					m_flowReporter.Report();
 				}
 			});
@@ -49,18 +43,15 @@ namespace netscope
 		return true;
 	}
 
-	void PacketCaptureService::Stop()
+	void NetscopeApplication::Stop()
 	{
 		m_running = false;
+
+		m_capture.Stop();
 
 		m_queue.Shutdown();
 
 		m_dispatcher.Stop();
-
-		if (m_pollThread.joinable())
-		{
-			m_pollThread.join();
-		}
 
 		if (m_dispatcherThread.joinable())
 		{
@@ -72,7 +63,6 @@ namespace netscope
 			m_reportThread.join();
 		}
 
-		m_loader.Unload();
 	}
-}
 
+}
