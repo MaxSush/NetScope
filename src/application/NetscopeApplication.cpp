@@ -40,12 +40,13 @@ namespace netscope
 				{
 					std::this_thread::sleep_for(std::chrono::seconds(1));
 
-					size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
-					LOG_WARN("Removed Idle Connections: {}", removed);
 					//m_processCache.CleanUp(FLOW_IDLE_TIMEOUT);
 
 					//m_flowReporter.Report();
 					m_processReporter.Report();
+
+					size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
+					LOG_WARN("Removed Idle Connections: {}", removed);
 				}
 			});
 

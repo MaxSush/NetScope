@@ -12,8 +12,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+enable_testing() 
+
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_subdirectory("src")
 add_subdirectory("app/netscope")
+
+add_subdirectory(tests)
