@@ -1,6 +1,6 @@
 #include "FlowKey.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	FlowKey FlowKey::Create(Endpoint source, Endpoint destination, Protocol protocol)
 	{

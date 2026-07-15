@@ -16,7 +16,6 @@ target_include_directories(NetScopePacketCapture
 target_link_libraries(NetScopePacketCapture
     PUBLIC
         NetScopeCore
-        NetScopeProcess
         NetScopeFlow
         ${LIBBPF_LIBRARIES}
 )

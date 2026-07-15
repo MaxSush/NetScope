@@ -1,7 +1,7 @@
 #include "IPAddress.h"
 #include <arpa/inet.h>
 
-namespace netscope
+namespace netscope::flow
 {
 	IPAddress::IPAddress()
 		: m_family(AddressFamily::IPv4)

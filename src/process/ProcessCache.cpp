@@ -1,6 +1,6 @@
 #include "ProcessCache.h"
 
-namespace netscope
+namespace netscope::process
 {
 	ProcessCache::ProcessCache(ProcessManager& processManager)
 		:

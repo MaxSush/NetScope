@@ -1,7 +1,7 @@
 #include "ConnectionTable.h"
 #include <iostream>
 
-namespace netscope
+namespace netscope::process
 {
 	ConnectionTable::ConnectionTable()
 	{

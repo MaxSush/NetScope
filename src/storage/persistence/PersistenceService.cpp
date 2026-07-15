@@ -10,7 +10,7 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult PersistenceService::SaveFlow(const ProcessInfo& process, const Flow& flow)
+	DatabaseResult PersistenceService::SaveFlow(const process::ProcessInfo& process, const flow::Flow& flow)
 	{
 		auto res = m_db.BeginTransaction();
 
@@ -36,12 +36,12 @@ namespace netscope::storage
 		return m_db.Commit();
 	}
 
-	DatabaseResult PersistenceService::EndProcess(const ProcessInfo& process)
+	DatabaseResult PersistenceService::EndProcess(const process::ProcessInfo& process)
 	{
 		return DatabaseResult();
 	}
 
-	DatabaseResult PersistenceService::CloseFlow(const Flow& flow)
+	DatabaseResult PersistenceService::CloseFlow(const flow::Flow& flow)
 	{
 		return DatabaseResult();
 	}

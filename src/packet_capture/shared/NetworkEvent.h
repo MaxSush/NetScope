@@ -12,14 +12,14 @@ namespace netscope
 		pid_t tid{};
 		uint64_t bytes;
 
-		Protocol protocol;
+		flow::Protocol protocol;
 		Direction direction;
-		AddressFamily family;
+		flow::AddressFamily family;
 
 		uint16_t sourcePort;
 		uint16_t destinationPort;
 
-		IPAddress sourceAddress;
-		IPAddress destinationAddress;
+		flow::IPAddress sourceAddress;
+		flow::IPAddress destinationAddress;
 	};
 }

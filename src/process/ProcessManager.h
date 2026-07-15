@@ -6,7 +6,7 @@
 #include <vector>
 
 
-namespace netscope
+namespace netscope::process
 {
 	class ProcessManager
 	{

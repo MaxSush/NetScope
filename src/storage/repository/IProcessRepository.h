@@ -11,8 +11,8 @@ namespace netscope::storage
 	public:
 		virtual ~IProcessRepository() = default;
 
-		virtual DatabaseResult Upsert(const ProcessInfo& process) = 0;
+		virtual DatabaseResult Upsert(const process::ProcessInfo& process) = 0;
 
-		virtual Expected<ProcessInfo, DatabaseResult> Find(uint32_t pid, uint64_t startTime) = 0;
+		virtual Expected<process::ProcessInfo, DatabaseResult> Find(uint32_t pid, uint64_t startTime) = 0;
 	};
 }

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-namespace netscope
+namespace netscope::process
 {
 	struct ProcessInfo
 	{

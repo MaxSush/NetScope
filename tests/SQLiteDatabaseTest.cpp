@@ -30,7 +30,7 @@ int main()
         return 1;
     }
 
-    ProcessInfo p{};
+    process::ProcessInfo p{};
     p.pid = 12345;
     p.name = "chrome";
     p.exe_path = "/usr/bin/chrome";
@@ -46,14 +46,14 @@ int main()
     }
     database.Rollback();
 
-    Expected<ProcessInfo, storage::DatabaseResult> result = repo.Find(p.pid, p.start_time);
+    Expected<process::ProcessInfo, storage::DatabaseResult> result = repo.Find(p.pid, p.start_time);
     if (!result.HasValue())
     {
         LOG_WARN(result.Error().message);
     }
     else
     {
-        ProcessInfo process = result.Value();
+        process::ProcessInfo process = result.Value();
         fmt::print("pid: {}, name: {}, exe_path: {}, start_time: {}\n", process.pid, process.name, process.exe_path, process.start_time);
     }
 

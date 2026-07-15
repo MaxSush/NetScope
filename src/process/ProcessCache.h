@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <optional>
 
-namespace netscope
+namespace netscope::process
 {
 	class ProcessCache
 	{

@@ -5,7 +5,7 @@
 
 namespace netscope
 {
-	ProcessReporter::ProcessReporter(ProcessAggregator& processAggregator, FlowManager& flowManager)
+	ProcessReporter::ProcessReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager)
 		: m_processAggregator(processAggregator),
 		m_flowManager(flowManager)
 	{
@@ -26,7 +26,7 @@ namespace netscope
 		std::cout << "------------------------------------------------------------------------------------------------------" << std::endl;
 
 		auto flows = m_flowManager.GetTable().GetSnapshot();
-		std::vector<ProcessView> processes = m_processAggregator.Aggregate(flows);
+		std::vector<flow::ProcessView> processes = m_processAggregator.Aggregate(flows);
 
 		for (const auto& process : processes)
 		{

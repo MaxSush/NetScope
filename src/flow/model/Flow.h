@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include "FlowView.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	/*
 		Flow

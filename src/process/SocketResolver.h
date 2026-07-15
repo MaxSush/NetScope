@@ -5,7 +5,7 @@
 
 #include "SocketInfo.h"
 
-namespace netscope
+namespace netscope::process
 {
 	class SocketResolver
 	{

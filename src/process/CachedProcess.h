@@ -3,7 +3,7 @@
 #include <chrono>
 #include "ProcessInfo.h"
 
-namespace netscope
+namespace netscope::process
 {
 	struct CachedProcess
 	{

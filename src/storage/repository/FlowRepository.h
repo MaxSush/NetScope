@@ -9,7 +9,7 @@ namespace netscope::storage
 	public:
 		explicit FlowRepository(IDatabase& database);
 
-		DatabaseResult Upsert(const Flow& flow) override;
+		DatabaseResult Upsert(const flow::Flow& flow) override;
 		//Expected<std::vector<FlowView>, DatabaseResult> FindByProcess(uint64_t processId) override;
 		//DatabaseResult Close(uint64_t flowId) override;
 

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 
-namespace netscope
+namespace netscope::flow
 {
 	class FlowTable
 	{

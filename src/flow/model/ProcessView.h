@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <model/FlowStatistics.h>
 
-namespace netscope
+namespace netscope::flow
 {
 	struct ProcessView
 	{

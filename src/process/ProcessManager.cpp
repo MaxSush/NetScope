@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-namespace netscope
+namespace netscope::process
 {
 	std::vector<ProcessInfo> ProcessManager::GetProcesses() const
 	{

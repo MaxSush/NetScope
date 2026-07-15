@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace netscope
+namespace netscope::flow
 {
 	struct FlowStatistics
 	{

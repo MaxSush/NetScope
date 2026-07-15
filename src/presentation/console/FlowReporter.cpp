@@ -5,7 +5,7 @@
 namespace netscope
 {
 
-	FlowReporter::FlowReporter(FlowManager& flowManager)
+	FlowReporter::FlowReporter(flow::FlowManager& flowManager)
 		: m_flowManager(flowManager)
 	{
 	}
@@ -13,9 +13,9 @@ namespace netscope
 	void FlowReporter::Report()
 	{
 		std::cout << "\033[2J\033[1;1H";
-		const FlowTable& flowTable = m_flowManager.GetTable();
+		const flow::FlowTable& flowTable = m_flowManager.GetTable();
 
-		std::vector<FlowView> flowViews = flowTable.GetSnapshot();
+		std::vector<flow::FlowView> flowViews = flowTable.GetSnapshot();
 
 		for (const auto& view : flowViews)
 		{

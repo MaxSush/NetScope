@@ -1,16 +1,20 @@
 #include "FlowManager.h"
 
-namespace netscope
+namespace netscope::flow
 {
-	void FlowManager::Process(const NetworkEvent& event)
+	size_t FlowManager::RemoveIdleFlows(Duration timeout)
 	{
-		// TODO: PacketEvent
-		Endpoint source {
+		return m_Table.RemoveIdleFlows(timeout);
+	}
+
+	Flow& FlowManager::Update(const NetworkEvent& event)
+	{
+		Endpoint source{
 			event.sourceAddress,
 			event.sourcePort
 		};
 
-		Endpoint destination {
+		Endpoint destination{
 			event.destinationAddress,
 			event.destinationPort
 		};
@@ -20,11 +24,8 @@ namespace netscope
 		Flow& flow = m_Table.GetOrDefault(key, event.pid);
 
 		flow.Update(event);
-	}
 
-	size_t FlowManager::RemoveIdleFlows(Duration timeout)
-	{
-		return m_Table.RemoveIdleFlows(timeout);
+		return flow;
 	}
 
 	const FlowTable& FlowManager::GetTable() const

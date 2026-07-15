@@ -10,9 +10,9 @@
 namespace std
 {
 	template<>
-	struct hash<netscope::IPAddress>
+	struct hash<netscope::flow::IPAddress>
 	{
-		size_t operator()(const netscope::IPAddress& ip) const
+		size_t operator()(const netscope::flow::IPAddress& ip) const
 		{
 			std::size_t seed = 0;
 
@@ -36,9 +36,9 @@ namespace std
 	};
 
 	template<>
-	struct hash<netscope::Endpoint>
+	struct hash<netscope::flow::Endpoint>
 	{
-		size_t operator()(const netscope::Endpoint& endpoint) const
+		size_t operator()(const netscope::flow::Endpoint& endpoint) const
 		{
 			size_t seed = 0;
 
@@ -50,9 +50,9 @@ namespace std
 	};
 
 	template<>
-	struct hash<netscope::FlowKey>
+	struct hash<netscope::flow::FlowKey>
 	{
-		size_t operator()(const netscope::FlowKey& key) const
+		size_t operator()(const netscope::flow::FlowKey& key) const
 		{
 			size_t seed = 0;
 

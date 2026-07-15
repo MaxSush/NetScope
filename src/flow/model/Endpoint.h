@@ -2,7 +2,7 @@
 
 #include "IPAddress.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	struct Endpoint
 	{
@@ -21,5 +21,5 @@ namespace netscope
 namespace std
 {
 	template<>
-	struct hash<netscope::Endpoint>;
+	struct hash<netscope::flow::Endpoint>;
 }

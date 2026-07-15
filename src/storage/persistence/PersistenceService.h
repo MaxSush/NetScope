@@ -12,11 +12,11 @@ namespace netscope::storage
 	public:
 		explicit PersistenceService(IDatabase& database);
 
-		DatabaseResult SaveFlow(const ProcessInfo& process, const Flow& flow);
+		DatabaseResult SaveFlow(const process::ProcessInfo& process, const flow::Flow& flow);
 
-		DatabaseResult EndProcess(const ProcessInfo& process);
+		DatabaseResult EndProcess(const process::ProcessInfo& process);
 
-		DatabaseResult CloseFlow(const Flow& flow);
+		DatabaseResult CloseFlow(const flow::Flow& flow);
 
 		//DatabaseResult SaveSnapshot(const Snapshot& snapshot);
 

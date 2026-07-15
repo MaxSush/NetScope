@@ -4,7 +4,7 @@
 #include <string>
 #include <array>
 
-namespace netscope
+namespace netscope::flow
 {
 	enum class AddressFamily : uint8_t
 	{
@@ -52,5 +52,5 @@ namespace netscope
 namespace std
 {
 	template<>
-	struct hash<netscope::IPAddress>;
+	struct hash<netscope::flow::IPAddress>;
 }

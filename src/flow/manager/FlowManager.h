@@ -1,16 +1,16 @@
 #pragma once
 
 #include "storage/FlowTable.h"
-#include <dispatcher/INetworkEventProcessor.h>
 
-namespace netscope
+namespace netscope::flow
 {
-	class FlowManager : public INetworkEventProcessor
+	class FlowManager
 	{
 	public:
 		FlowManager() = default;
 
-		void Process(const NetworkEvent& event) override;
+		Flow& Update(const NetworkEvent& event);
+
 		const FlowTable& GetTable() const;
 
 		size_t RemoveIdleFlows(Duration timeout);

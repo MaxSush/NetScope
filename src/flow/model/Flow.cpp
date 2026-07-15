@@ -1,6 +1,6 @@
 #include "Flow.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	Flow::Flow(const FlowKey& key, pid_t pid)
 		:
@@ -65,7 +65,7 @@ namespace netscope
 	{
 		return m_statistics;
 	}
-	const FlowKey& netscope::Flow::GetFlowKey() const
+	const FlowKey& Flow::GetFlowKey() const
 	{
 		return m_key;
 	}

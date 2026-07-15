@@ -7,7 +7,7 @@
 #include "ProcessManager.h"
 #include "SocketResolver.h"
 
-namespace netscope
+namespace netscope::process
 {
 	class ConnectionTable
 	{

@@ -10,7 +10,7 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult ProcessRepository::Upsert(const ProcessInfo& process)
+	DatabaseResult ProcessRepository::Upsert(const process::ProcessInfo& process)
 	{
 		constexpr auto UpsertSql = R"sql(
 			INSERT INTO Processes
@@ -67,7 +67,7 @@ namespace netscope::storage
 		return DatabaseResult::Ok();
 	}
 
-	Expected<ProcessInfo, DatabaseResult> ProcessRepository::Find(uint32_t pid, uint64_t startTime)
+	Expected<process::ProcessInfo, DatabaseResult> ProcessRepository::Find(uint32_t pid, uint64_t startTime)
 	{
 		constexpr auto FindSql = R"sql(
 			SELECT
@@ -110,7 +110,7 @@ namespace netscope::storage
 			return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::STEP_FAILED, "Sql Step execution Failed.");
 		}
 
-		ProcessInfo process{};
+		process::ProcessInfo process{};
 		process.pid = statement->GetInt32(0);
 		process.start_time = statement->GetInt64(1);
 		// TODO: end_time

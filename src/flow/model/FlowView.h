@@ -5,7 +5,7 @@
 #include "FlowStatistics.h"
 #include <time/TimeUtils.h>
 
-namespace netscope
+namespace netscope::flow
 {
 	struct FlowView
 	{

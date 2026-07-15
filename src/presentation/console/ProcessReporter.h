@@ -7,11 +7,11 @@ namespace netscope
 	class ProcessReporter
 	{
 	public:
-		explicit ProcessReporter(ProcessAggregator& processAggregator, FlowManager& flowManager);
+		explicit ProcessReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager);
 
 		void Report();
 	private:
 		ProcessAggregator& m_processAggregator;
-		FlowManager& m_flowManager;
+		flow::FlowManager& m_flowManager;
 	};
 }

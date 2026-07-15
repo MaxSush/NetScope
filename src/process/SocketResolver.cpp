@@ -3,7 +3,7 @@
 
 namespace fs = std::filesystem;
 
-namespace netscope
+namespace netscope::process
 {
 	std::vector<SocketInfo> SocketResolver::GetSockets(uint32_t pid) const
 	{

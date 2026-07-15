@@ -4,20 +4,20 @@
 
 namespace netscope
 {
-	ProcessAggregator::ProcessAggregator(ProcessCache& cache)
+	ProcessAggregator::ProcessAggregator(process::ProcessCache& cache)
 		: m_processCache(cache)
 	{
 	}
 
-	std::vector<ProcessView> ProcessAggregator::Aggregate(const std::vector<FlowView>& flows) const
+	std::vector<flow::ProcessView> ProcessAggregator::Aggregate(const std::vector<flow::FlowView>& flows) const
 	{
-		std::unordered_map<pid_t, ProcessView> processes;
+		std::unordered_map<pid_t, flow::ProcessView> processes;
 
 		for (const auto& flow : flows)
 		{
 			auto [it, inserted] = processes.try_emplace(flow.pid);
 
-			ProcessView& process = it->second;
+			flow::ProcessView& process = it->second;
 			
 			if (inserted)
 			{
@@ -43,14 +43,14 @@ namespace netscope
 			}
 		}
 
-		std::vector<ProcessView> result;
+		std::vector<flow::ProcessView> result;
 		result.reserve(processes.size());
 		for (auto& [pid, process] : processes)
 		{
 			result.emplace_back(std::move(process));
 		}
 
-		std::sort(result.begin(), result.end(), [](const ProcessView& a, const ProcessView& b) {
+		std::sort(result.begin(), result.end(), [](const flow::ProcessView& a, const flow::ProcessView& b) {
 			return (a.statistics.downloadBytes + a.statistics.uploadBytes) < (b.statistics.downloadBytes + b.statistics.uploadBytes);
 			});
 

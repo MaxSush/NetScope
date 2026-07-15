@@ -9,7 +9,7 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult FlowRepository::Upsert(const Flow& flow)
+	DatabaseResult FlowRepository::Upsert(const flow::Flow& flow)
 	{
 		constexpr auto UpsertSql = R"sql(
             INSERT INTO Flows

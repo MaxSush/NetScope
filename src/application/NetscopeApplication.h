@@ -5,7 +5,8 @@
 #include <console/FlowReporter.h>
 #include <runtime/CaptureRuntime.h>
 #include <console/ProcessReporter.h>
-
+#include <event/DomainEventBus.h>
+#include <processor/FlowProcessor.h>
 
 
 namespace netscope
@@ -24,11 +25,14 @@ namespace netscope
 
 		PacketDispatcher m_dispatcher;
 
-		ProcessManager m_processManager;
-		ProcessCache m_processCache;
+		process::ProcessManager m_processManager;
+		process::ProcessCache m_processCache;
 
 		ProcessAggregator m_processAggregator;
-		FlowManager m_flowManager;
+		flow::FlowManager m_flowManager;
+
+		core::DomainEventBus<processing::FlowUpdatedEvent> m_eventBus;
+		processing::FlowProcessor m_flowProcessor;
 
 		FlowReporter m_flowReporter;
 		ProcessReporter m_processReporter;

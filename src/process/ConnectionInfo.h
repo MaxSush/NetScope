@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "ProcessInfo.h"
 
-namespace netscope
+namespace netscope::process
 {
 	struct ConnectionInfo
 	{

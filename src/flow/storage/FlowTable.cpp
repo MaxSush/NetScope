@@ -1,8 +1,8 @@
 #include "FlowTable.h"
 
-namespace netscope
+namespace netscope::flow
 {
-	Flow* netscope::FlowTable::Find(const FlowKey& key)
+	Flow* FlowTable::Find(const FlowKey& key)
 	{
 		std::shared_lock lock(m_mutex);
 

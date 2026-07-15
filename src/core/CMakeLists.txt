@@ -5,7 +5,7 @@ add_library(NetScopeCore STATIC
    "event/EventBus.cpp"
    "event/EventQueue.h"
  "hash/HashUtils.h" "time/TimeUtils.h" "Config.h" "format/ByteFormatter.cpp" "format/ByteFormatter.h" "utilities/Expected.h"
- )
+  "event/IEventSubscriber.h" "event/DomainEventBus.h")
 
 target_include_directories(NetScopeCore
     PUBLIC

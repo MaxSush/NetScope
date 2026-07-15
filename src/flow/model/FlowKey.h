@@ -4,7 +4,7 @@
 #include "Endpoint.h"
 #include "Protocol.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	struct FlowKey
 	{
@@ -24,5 +24,5 @@ namespace netscope
 namespace std
 {
 	template<>
-	struct hash<netscope::FlowKey>;
+	struct hash<netscope::flow::FlowKey>;
 }

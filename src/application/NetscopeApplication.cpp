@@ -12,9 +12,10 @@ namespace netscope
 		m_flowReporter(m_flowManager),
 		m_processCache(m_processManager),
 		m_processAggregator(m_processCache),
-		m_processReporter(m_processAggregator, m_flowManager)
+		m_processReporter(m_processAggregator, m_flowManager),
+		m_flowProcessor(m_processManager, m_flowManager, m_eventBus)
 	{
-		m_dispatcher.AddProcessor(m_flowManager);
+		m_dispatcher.AddProcessor(m_flowProcessor);
 	}
 
 	bool NetscopeApplication::Start()

@@ -21,17 +21,17 @@ namespace netscope
 
 		event.bytes = packet->bytes;
 		
-		event.protocol = ToProtocol(packet->protocol);
-		event.family = AddressFamily::IPv4;
+		event.protocol = flow::ToProtocol(packet->protocol);
+		event.family = flow::AddressFamily::IPv4;
 		event.direction = (packet->direction == 0) ? Direction::INCOMMING : Direction::OUTGOING;
 
 		event.sourcePort = packet->source_port;
 		event.destinationPort = packet->destination_port;
 
-		if (event.family == AddressFamily::IPv4)
+		if (event.family == flow::AddressFamily::IPv4)
 		{
-			event.sourceAddress = IPAddress::IPv4(packet->source.ipv4);
-			event.destinationAddress = IPAddress::IPv4(packet->destination.ipv4);
+			event.sourceAddress = flow::IPAddress::IPv4(packet->source.ipv4);
+			event.destinationAddress = flow::IPAddress::IPv4(packet->destination.ipv4);
 		}
 		else
 		{

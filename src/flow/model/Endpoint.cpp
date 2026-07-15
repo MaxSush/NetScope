@@ -1,6 +1,6 @@
 #include "Endpoint.h"
 
-namespace netscope
+namespace netscope::flow
 {
 	bool Endpoint::operator==(const Endpoint& other) const
 	{
