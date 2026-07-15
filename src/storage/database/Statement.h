@@ -30,6 +30,8 @@ namespace netscope::storage
 
 		DatabaseResult Bind(int index, uint32_t val);
 		DatabaseResult Bind(int index, uint64_t val);
+		DatabaseResult Bind(int index, int64_t val);
+		DatabaseResult Bind(int index, int32_t val);
 		DatabaseResult Bind(int index, const std::string& val);
 		DatabaseResult BindNull(int index);
 

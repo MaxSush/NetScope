@@ -1,5 +1,4 @@
 #include "FlowManager.h"
-#include "FlowManager.h"
 
 namespace netscope
 {

@@ -3,7 +3,6 @@
 #include <utilities/Expected.h>
 #include <ProcessInfo.h>
 #include <cstdint>
-#include <optional>
 
 namespace netscope::storage
 {

@@ -1,4 +1,6 @@
 #include "Statement.h"
+#include "Statement.h"
+#include "Statement.h"
 
 #include <sqlite3.h>
 
@@ -53,6 +55,24 @@ namespace netscope::storage
 		if (sqlite3_bind_int64(m_stmt, index, val) != SQLITE_OK) 
 		{
 			return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::BIND_FAILED, "Failed to bind Integer[64].");
+		}
+		return DatabaseResult::Ok();
+	}
+
+	DatabaseResult Statement::Bind(int index, int64_t val)
+	{
+		if (sqlite3_bind_int64(m_stmt, index, val) != SQLITE_OK)
+		{
+			return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::BIND_FAILED, "Failed to bind Integer[64].");
+		}
+		return DatabaseResult::Ok();
+	}
+
+	DatabaseResult Statement::Bind(int index, int32_t val)
+	{
+		if (sqlite3_bind_int(m_stmt, index, val) != SQLITE_OK)
+		{
+			return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::BIND_FAILED, "Failed to bind Integer[32].");
 		}
 		return DatabaseResult::Ok();
 	}

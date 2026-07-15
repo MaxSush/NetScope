@@ -48,7 +48,7 @@ namespace netscope::storage
 
 		constexpr auto FlowsTableSql = R"sql(
 			CREATE TABLE IF NOT EXISTS Flows(
-				flow_id INTEGER PRIMARY KEY AUTOINCREMENT,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 
 				process_id INTEGER NOT NULL,
 

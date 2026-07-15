@@ -1,7 +1,4 @@
 #include "Flow.h"
-#include "Flow.h"
-#include "Flow.h"
-#include "Flow.h"
 
 namespace netscope
 {
@@ -10,13 +7,15 @@ namespace netscope
 		m_key(key),
 		m_pid(pid)
 	{
-		m_firstSeen = Clock::now();
-		m_lastSeen = Clock::now();
+		m_lastActivity = Steady_Clock::now();
+		m_firstSeen = System_Clock::now();
+		m_lastSeen = System_Clock::now();
 	}
 
 	void Flow::Update(const NetworkEvent& event)
 	{
-		m_lastSeen = Clock::now();
+		m_lastSeen = System_Clock::now();
+		m_lastActivity = Steady_Clock::now();
 
 		if (event.direction == Direction::OUTGOING)
 		{
@@ -42,12 +41,12 @@ namespace netscope
 
 	Duration Flow::GetIdleTime() const
 	{
-		return Clock::now() - m_lastSeen;
+		return Steady_Clock::now() - m_lastActivity;
 	}
 
 	Duration Flow::GetFlowLifetime() const
 	{
-		 return Clock::now() - m_lastSeen;
+		 return Steady_Clock::now() - m_lastActivity;
 	}
 
 	FlowView Flow::ToView() const
@@ -58,12 +57,16 @@ namespace netscope
 		view.statistics = m_statistics;
 		view.firstSeen = m_firstSeen;
 		view.lastSeen = m_lastSeen;
-
+		view.IdleTime = GetIdleTime();
 		return view;
 	}
 
 	const FlowStatistics& Flow::GetStatistics() const
 	{
 		return m_statistics;
+	}
+	const FlowKey& netscope::Flow::GetFlowKey() const
+	{
+		return m_key;
 	}
 }

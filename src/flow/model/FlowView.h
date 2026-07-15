@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "FlowKey.h"
 #include "FlowStatistics.h"
-#include <timer/TimeTypes.h>
+#include <time/TimeUtils.h>
 
 namespace netscope
 {
@@ -13,13 +13,14 @@ namespace netscope
 		pid_t pid;
 		FlowStatistics statistics;
 
-		TimePoint firstSeen;
-		TimePoint lastSeen;
+		System_TimePoint firstSeen;
+		System_TimePoint lastSeen;
 		
+		Duration IdleTime;
+
 		inline bool IsIdle(Duration timeout) const
 		{
-			Duration duration = Clock::now() - lastSeen;
-			return (duration >= timeout);
+			return IdleTime >= timeout;
 		}
 	};
 }

@@ -1,10 +1,10 @@
 add_library(NetScopeCore STATIC
    "logger/Logger.cpp"
-   "timer/Timer.cpp"
+   "time/Timer.cpp"
    "threading/Thread.cpp"
    "event/EventBus.cpp"
    "event/EventQueue.h"
- "hash/HashUtils.h" "timer/TimeTypes.h" "Config.h" "format/ByteFormatter.cpp" "format/ByteFormatter.h" "utilities/Expected.h"
+ "hash/HashUtils.h" "time/TimeUtils.h" "Config.h" "format/ByteFormatter.cpp" "format/ByteFormatter.h" "utilities/Expected.h"
  )
 
 target_include_directories(NetScopeCore
