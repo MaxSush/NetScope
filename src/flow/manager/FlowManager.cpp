@@ -7,7 +7,12 @@ namespace netscope::flow
 		return m_Table.RemoveIdleFlows(timeout);
 	}
 
-	Flow& FlowManager::Update(const NetworkEvent& event)
+	void FlowManager::Process(processing::ProcessingContext& context)
+	{
+		context.flow = Update(context.input);
+	}
+
+	FlowResult FlowManager::Update(const NetworkEvent& event)
 	{
 		Endpoint source{
 			event.sourceAddress,
@@ -21,16 +26,15 @@ namespace netscope::flow
 
 		FlowKey key = FlowKey::Create(source, destination, event.protocol);
 
-		Flow& flow = m_Table.GetOrDefault(key, event.pid);
+		auto [flow, created] = m_Table.GetOrDefault(key, event.pid);
+		flow.get().Update(event);
 
-		flow.Update(event);
-
-		return flow;
+		return { flow, (created) ? FlowChange::Created : FlowChange::Updated };
 	}
 
-	const FlowTable& FlowManager::GetTable() const
+	std::vector<FlowSnapshot> FlowManager::GetSnapshot() const
 	{
-		return m_Table;
+		return m_Table.GetSnapshot();
 	}
 
 	void FlowManager::Clear()

@@ -1,19 +1,18 @@
 #pragma once
 #include "shared/NetworkEvent.h"
 #include <event/EventQueue.h>
+#include <pipeline/ProcessingPipeline.h>
 
 #include <atomic>
 
-namespace netscope
+namespace netscope::processing
 {
 	class INetworkEventProcessor;
 
 	class PacketDispatcher
 	{
 	public:
-		explicit PacketDispatcher(EventQueue<NetworkEvent>& queue);
-
-		void AddProcessor(INetworkEventProcessor& processor);
+		explicit PacketDispatcher(EventQueue<NetworkEvent>& queue, ProcessingPipeline& pipeline);
 
 		void Run();
 		void Stop();
@@ -23,6 +22,6 @@ namespace netscope
 
 		std::atomic<bool> m_running = true;
 
-		std::vector<INetworkEventProcessor*> m_processors;
+		ProcessingPipeline& m_pipeline;
 	};
 }

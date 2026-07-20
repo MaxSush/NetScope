@@ -5,8 +5,6 @@ namespace netscope::process
 {
 	ConnectionTable::ConnectionTable()
 	{
-		pm = ProcessManager();
-		sr = SocketResolver();
 	}
 
 	void ConnectionTable::Build()

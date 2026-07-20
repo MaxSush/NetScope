@@ -4,12 +4,12 @@
 
 namespace netscope
 {
-	ProcessAggregator::ProcessAggregator(process::ProcessCache& cache)
-		: m_processCache(cache)
+	ProcessAggregator::ProcessAggregator(process::ProcessManager& processManager)
+		: m_processManager(processManager)
 	{
 	}
 
-	std::vector<flow::ProcessView> ProcessAggregator::Aggregate(const std::vector<flow::FlowView>& flows) const
+	std::vector<flow::ProcessView> ProcessAggregator::Aggregate(const std::vector<flow::FlowSnapshot>& flows) const
 	{
 		std::unordered_map<pid_t, flow::ProcessView> processes;
 
@@ -21,11 +21,10 @@ namespace netscope
 			
 			if (inserted)
 			{
-
 				process.pid = flow.pid;
-				if (auto info = m_processCache.FindProcess(flow.pid))
+				if (auto info = m_processManager.Resolve(flow.pid))
 				{
-					process.processName = info->name;
+					process.processName = info->process.get().name;
 				}
 				else
 				{

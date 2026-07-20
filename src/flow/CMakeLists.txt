@@ -5,7 +5,7 @@ add_library(NetScopeFlow STATIC
     "model/FlowKey.h"
  "model/Endpoint.h" "model/Endpoint.cpp" "model/FlowKey.cpp" "FlowHash.h"
  "model/Flow.h" "model/Flow.cpp" "model/FlowStatistics.h" "storage/FlowTable.cpp"
- "storage/FlowTable.h" "manager/FlowManager.cpp" "manager/FlowManager.h" "model/FlowView.h")
+ "storage/FlowTable.h" "manager/FlowManager.cpp" "manager/FlowManager.h" "model/FlowSnapshot.h"  "storage/FlowResult.h")
 
 target_include_directories(NetScopeFlow
     PUBLIC

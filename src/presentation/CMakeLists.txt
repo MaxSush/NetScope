@@ -1,8 +1,8 @@
 add_library(NetScopePresentation STATIC
-    "console/FlowReporter.cpp"
-  "console/ProcessReporter.h" "console/ProcessReporter.cpp"
+    
+   
     "aggregation/ProcessAggregator.h" "aggregation/ProcessAggregator.cpp"
-)
+ "console/ConsoleReporter.h" "console/ConsoleReporter.cpp")
 
 target_include_directories(NetScopePresentation
     PUBLIC

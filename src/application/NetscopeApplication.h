@@ -1,12 +1,12 @@
 #pragma once
 #include <thread>
 #include <dispatcher/PacketDispatcher.h>
+#include <coordinator/NetworkCoordinator.h>
 #include <manager/FlowManager.h>
-#include <console/FlowReporter.h>
 #include <runtime/CaptureRuntime.h>
-#include <console/ProcessReporter.h>
-#include <event/DomainEventBus.h>
-#include <processor/FlowProcessor.h>
+#include <DebugSubscriber.h>
+#include <ProcessManager.h>
+#include <console/ConsoleReporter.h>
 
 
 namespace netscope
@@ -23,19 +23,17 @@ namespace netscope
 		EventQueue<NetworkEvent> m_queue;
 		CaptureRuntime m_capture;
 
-		PacketDispatcher m_dispatcher;
+		processing::NetworkCoordinator m_coordinator;
+		processing::ProcessingPipeline m_pipeline;
+		processing::PacketDispatcher m_dispatcher;
+
+		DebugSubscriber m_debug;
 
 		process::ProcessManager m_processManager;
-		process::ProcessCache m_processCache;
-
-		ProcessAggregator m_processAggregator;
 		flow::FlowManager m_flowManager;
 
-		core::DomainEventBus<processing::FlowUpdatedEvent> m_eventBus;
-		processing::FlowProcessor m_flowProcessor;
-
-		FlowReporter m_flowReporter;
-		ProcessReporter m_processReporter;
+		ProcessAggregator m_processAggregator;
+		presentation::ConsoleReporter m_consoleReporter;
 
 		std::thread m_dispatcherThread;
 		std::thread m_reportThread;

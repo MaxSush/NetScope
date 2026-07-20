@@ -14,7 +14,7 @@ namespace netscope::core
 
 		void Unsubscribe(IEventSubscriber<T>& subscriber);
 
-		void Broadcast(const T& event);
+		void Publish(const T& event) const;
 	private:
 		std::vector<IEventSubscriber<T>*> m_subscribers;
 	};
@@ -22,7 +22,10 @@ namespace netscope::core
 	template<typename T>
 	inline void DomainEventBus<T>::Subscribe(IEventSubscriber<T>& subscriber)
 	{
-		m_subscribers.push_back(&subscriber);
+		if (std::find(m_subscribers.begin(), m_subscribers.end(), &subscriber) == m_subscribers.end())
+		{
+			m_subscribers.push_back(&subscriber);
+		}
 	}
 
 	template<typename T>
@@ -33,7 +36,7 @@ namespace netscope::core
 	}
 
 	template<typename T>
-	inline void DomainEventBus<T>::Broadcast(const T& event)
+	inline void DomainEventBus<T>::Publish(const T& event) const
 	{
 		for (auto* sub : m_subscribers)
 		{

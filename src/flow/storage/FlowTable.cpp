@@ -1,4 +1,6 @@
 #include "FlowTable.h"
+#include <utility>
+#include <mutex>
 
 namespace netscope::flow
 {
@@ -14,17 +16,17 @@ namespace netscope::flow
 		return nullptr;
 	}
 
-	Flow& FlowTable::GetOrDefault(const FlowKey& key, const pid_t pid)
+	std::pair<std::reference_wrapper<Flow>, bool> FlowTable::GetOrDefault(const FlowKey& key, const pid_t pid)
 	{
 		std::lock_guard lock(m_mutex);
 
 		auto it = m_flows.find(key);
 		if (it != m_flows.end())
 		{
-			return it->second;
+			return std::make_pair(std::ref(it->second), false);
 		}
 		auto result = m_flows.emplace(key, Flow(key, pid));
-		return result.first->second;
+		return std::make_pair(std::ref(result.first->second), true);
 	}
 
 	void FlowTable::Remove(const FlowKey& key)
@@ -74,15 +76,15 @@ namespace netscope::flow
 		return removed;
 	}
 
-	std::vector<FlowView> FlowTable::GetSnapshot() const
+	std::vector<FlowSnapshot> FlowTable::GetSnapshot() const
 	{
-		std::vector<FlowView> snapshot;
+		std::vector<FlowSnapshot> snapshot;
 		{
 			std::shared_lock lock(m_mutex);
 			snapshot.reserve(m_flows.size());
 			for (const auto& [key, flow] : m_flows)
 			{
-				snapshot.emplace_back(flow.ToView());
+				snapshot.emplace_back(flow.GetSnapshot());
 			}
 		}
 		return snapshot;

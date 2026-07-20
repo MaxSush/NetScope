@@ -2,7 +2,8 @@ add_library(NetScopeProcessor STATIC
     "dispatcher/INetworkEventProcessor.h"
     "dispatcher/PacketDispatcher.cpp"
     
-  "activity/FlowUpdatedEvent.h" "processor/FlowProcessor.h" "processor/FlowProcessor.cpp")
+  "activity/FlowUpdatedEvent.h"
+  "context/ProcessingContext.h" "coordinator/NetworkCoordinator.cpp" "pipeline/ProcessingPipeline.h" "pipeline/ProcessingPipeline.cpp" "pipeline/IContextProcessor.h" "activity/FlowCreatedEvent.h")
 
 target_include_directories(NetScopeProcessor
     PUBLIC

@@ -8,14 +8,15 @@ namespace netscope
 	NetscopeApplication::NetscopeApplication()
 		:
 		m_capture(m_queue),
-		m_dispatcher(m_queue),
-		m_flowReporter(m_flowManager),
-		m_processCache(m_processManager),
-		m_processAggregator(m_processCache),
-		m_processReporter(m_processAggregator, m_flowManager),
-		m_flowProcessor(m_processManager, m_flowManager, m_eventBus)
+		m_dispatcher(m_queue, m_pipeline),
+		m_pipeline(m_coordinator),
+		m_processAggregator(m_processManager),
+		m_consoleReporter(m_processAggregator, m_flowManager)
 	{
-		m_dispatcher.AddProcessor(m_flowProcessor);
+		m_pipeline.AddStage(m_flowManager);
+		m_pipeline.AddStage(m_processManager);
+
+		//m_coordinator.Subscribe(m_debug);
 	}
 
 	bool NetscopeApplication::Start()
@@ -43,8 +44,7 @@ namespace netscope
 
 					//m_processCache.CleanUp(FLOW_IDLE_TIMEOUT);
 
-					//m_flowReporter.Report();
-					m_processReporter.Report();
+					m_consoleReporter.Report();
 
 					size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
 					LOG_WARN("Removed Idle Connections: {}", removed);

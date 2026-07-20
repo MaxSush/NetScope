@@ -1,13 +1,14 @@
 #pragma once
+
 #include <aggregation/ProcessAggregator.h>
 #include <manager/FlowManager.h>
 
-namespace netscope
+namespace netscope::presentation
 {
-	class ProcessReporter
+	class ConsoleReporter
 	{
 	public:
-		explicit ProcessReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager);
+		explicit ConsoleReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager);
 
 		void Report();
 	private:

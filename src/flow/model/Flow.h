@@ -6,7 +6,7 @@
 #include <time/TimeUtils.h>
 
 #include <sys/types.h>
-#include "FlowView.h"
+#include "FlowSnapshot.h"
 
 namespace netscope::flow
 {
@@ -26,16 +26,12 @@ namespace netscope::flow
 
 		void Update(const NetworkEvent& event);
 
-		const FlowStatistics& GetStatistics() const;
-
-		const FlowKey& GetFlowKey() const;
-
 		pid_t GetPID() const;
 		bool IsIdle(Duration timeout) const;
 		Duration GetIdleTime() const;
 		Duration GetFlowLifetime() const;
 
-		FlowView ToView() const;
+		FlowSnapshot GetSnapshot() const;
 	private:
 		FlowKey m_key;
 
@@ -45,7 +41,6 @@ namespace netscope::flow
 
 		Steady_TimePoint m_lastActivity;
 
-	public:
 		System_TimePoint m_firstSeen;
 		System_TimePoint m_lastSeen;
 	};

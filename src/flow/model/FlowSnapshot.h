@@ -7,7 +7,7 @@
 
 namespace netscope::flow
 {
-	struct FlowView
+	struct FlowSnapshot
 	{
 		FlowKey key;
 		pid_t pid;

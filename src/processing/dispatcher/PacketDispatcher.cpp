@@ -4,16 +4,12 @@
 #include <iostream>
 #include <logger/Logger.h>
 
-namespace netscope
+namespace netscope::processing
 {
-	PacketDispatcher::PacketDispatcher(EventQueue<NetworkEvent>& queue)
-		: m_queue(queue)
+	PacketDispatcher::PacketDispatcher(EventQueue<NetworkEvent>& queue, ProcessingPipeline& pipeline)
+		: m_queue(queue),
+		m_pipeline(pipeline)
 	{
-		m_processors.reserve(8);
-	}
-	void PacketDispatcher::AddProcessor(INetworkEventProcessor& processor)
-	{
-		m_processors.push_back(&processor);
 	}
 
 	void PacketDispatcher::Run()
@@ -24,10 +20,7 @@ namespace netscope
 			{
 				NetworkEvent event = m_queue.Pop();
 
-				for (auto* processor : m_processors)
-				{
-					processor->Process(event);
-				}
+				m_pipeline.Process(event);
 			}
 			catch (...)
 			{

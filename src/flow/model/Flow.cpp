@@ -49,24 +49,17 @@ namespace netscope::flow
 		 return Steady_Clock::now() - m_lastActivity;
 	}
 
-	FlowView Flow::ToView() const
+	FlowSnapshot Flow::GetSnapshot() const
 	{
-		FlowView view;
-		view.key = m_key;
-		view.pid = m_pid;
-		view.statistics = m_statistics;
-		view.firstSeen = m_firstSeen;
-		view.lastSeen = m_lastSeen;
-		view.IdleTime = GetIdleTime();
-		return view;
+		FlowSnapshot snapshot;
+		snapshot.key = m_key;
+		snapshot.pid = m_pid;
+		snapshot.statistics = m_statistics;
+		snapshot.firstSeen = m_firstSeen;
+		snapshot.lastSeen = m_lastSeen;
+		snapshot.IdleTime = GetIdleTime();
+
+		return snapshot;
 	}
 
-	const FlowStatistics& Flow::GetStatistics() const
-	{
-		return m_statistics;
-	}
-	const FlowKey& Flow::GetFlowKey() const
-	{
-		return m_key;
-	}
 }

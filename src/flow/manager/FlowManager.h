@@ -1,17 +1,20 @@
 #pragma once
 
 #include "storage/FlowTable.h"
+#include <pipeline/IContextProcessor.h>
 
 namespace netscope::flow
 {
-	class FlowManager
+	class FlowManager : public processing::IContextProcessor
 	{
 	public:
 		FlowManager() = default;
 
-		Flow& Update(const NetworkEvent& event);
+		void Process(processing::ProcessingContext& context) override;
 
-		const FlowTable& GetTable() const;
+		FlowResult Update(const NetworkEvent& event);
+
+		std::vector<FlowSnapshot> GetSnapshot() const;
 
 		size_t RemoveIdleFlows(Duration timeout);
 

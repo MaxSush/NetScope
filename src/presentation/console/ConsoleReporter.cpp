@@ -1,17 +1,17 @@
-#include "ProcessReporter.h"
+#include "ConsoleReporter.h"
 #include <iostream>
 #include <fmt/core.h>
 #include <format/ByteFormatter.h>
 
-namespace netscope
+namespace netscope::presentation
 {
-	ProcessReporter::ProcessReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager)
+	ConsoleReporter::ConsoleReporter(ProcessAggregator& processAggregator, flow::FlowManager& flowManager)
 		: m_processAggregator(processAggregator),
-		m_flowManager(flowManager)
+		m_flowManager(flowManager) 
 	{
 	}
 
-	void ProcessReporter::Report()
+	void ConsoleReporter::Report()
 	{
 		std::cout << "\033[2J\033[1;1H";
 
@@ -25,7 +25,7 @@ namespace netscope
 			"DOWNLOAD");
 		std::cout << "------------------------------------------------------------------------------------------------------" << std::endl;
 
-		auto flows = m_flowManager.GetTable().GetSnapshot();
+		auto flows = m_flowManager.GetSnapshot();
 		std::vector<flow::ProcessView> processes = m_processAggregator.Aggregate(flows);
 
 		for (const auto& process : processes)
@@ -40,7 +40,5 @@ namespace netscope
 				ByteFormatter::Format(process.statistics.downloadBytes)
 			);
 		}
-
 	}
-
 }

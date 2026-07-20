@@ -1,15 +1,11 @@
 #pragma once
-#include <shared/NetworkEvent.h>
-#include <ProcessInfo.h>
-#include <model/FlowView.h>
 
-
+#include <model/FlowSnapshot.h>
 
 namespace netscope::processing
 {
 	struct FlowUpdatedEvent
 	{
-		process::ProcessInfo process;
-		flow::FlowView flow;
+		flow::FlowSnapshot flow;
 	};
 }
