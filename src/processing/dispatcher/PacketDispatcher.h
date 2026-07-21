@@ -15,12 +15,9 @@ namespace netscope::processing
 		explicit PacketDispatcher(EventQueue<NetworkEvent>& queue, ProcessingPipeline& pipeline);
 
 		void Run();
-		void Stop();
 
 	private:
 		EventQueue<NetworkEvent>& m_queue;
-
-		std::atomic<bool> m_running = true;
 
 		ProcessingPipeline& m_pipeline;
 	};

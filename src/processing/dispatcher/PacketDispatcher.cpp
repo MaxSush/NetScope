@@ -14,25 +14,14 @@ namespace netscope::processing
 
 	void PacketDispatcher::Run()
 	{
-		while (m_running)
+		try
 		{
-			try
-			{
-				NetworkEvent event = m_queue.Pop();
-
-				m_pipeline.Process(event);
-			}
-			catch (...)
-			{
-				LOG_ERROR("PacketDispatcher::Run Unkown Error occured");
-				break;
-			}
+			NetworkEvent event = m_queue.Pop();
+			m_pipeline.Process(event);
+		}
+		catch (...)
+		{
+			LOG_ERROR("PacketDispatcher::Run Unkown Error occured");
 		}
 	}
-
-	void PacketDispatcher::Stop()
-	{
-		m_running = false;
-	}
-
 }

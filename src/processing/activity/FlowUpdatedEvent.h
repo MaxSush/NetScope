@@ -6,6 +6,6 @@ namespace netscope::processing
 {
 	struct FlowUpdatedEvent
 	{
-		flow::FlowSnapshot flow;
+		flow::FlowSnapshot flowSnapshot;
 	};
 }

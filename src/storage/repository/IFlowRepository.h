@@ -4,14 +4,14 @@
 #include <utilities/Expected.h>
 
 #include <vector>
-#include <model/Flow.h>
+#include <model/FlowSnapshot.h>
 
 namespace netscope::storage
 {
 	class IFlowRepository
 	{
 	public:
-		virtual DatabaseResult Upsert(const flow::Flow& flow) = 0;
+		virtual DatabaseResult Upsert(const flow::FlowSnapshot& flow) = 0;
 		//virtual Expected<std::vector<FlowView>, DatabaseResult> FindByProcess(uint64_t processId) = 0;
 		//virtual DatabaseResult Close(uint64_t flowId) = 0;
 	};

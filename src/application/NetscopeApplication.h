@@ -7,7 +7,8 @@
 #include <DebugSubscriber.h>
 #include <ProcessManager.h>
 #include <console/ConsoleReporter.h>
-
+#include <persistence/PersistenceService.h>
+#include <database/SQLiteDatabase.h>
 
 namespace netscope
 {
@@ -18,6 +19,8 @@ namespace netscope
 
 		bool Start();
 		void Stop();
+
+		bool InitializeDatabase();
 
 	private:
 		EventQueue<NetworkEvent> m_queue;
@@ -35,9 +38,14 @@ namespace netscope
 		ProcessAggregator m_processAggregator;
 		presentation::ConsoleReporter m_consoleReporter;
 
+		storage::SQLiteDatabase m_database;
+		storage::PersistenceService m_persistenceService;
+
+		std::thread m_captureRuntimeThread;
+		std::thread m_persistenceServiceThread;
 		std::thread m_dispatcherThread;
 		std::thread m_reportThread;
 
-		bool m_running = false;
+		std::atomic<bool> m_running = false;
 	};
 }

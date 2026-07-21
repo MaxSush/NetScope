@@ -4,7 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <stdexcept>
-
+#include <time/TimeUtils.h>
 
 namespace netscope
 {
@@ -14,6 +14,10 @@ namespace netscope
 	public:
 		void Push(const T& item);
 		T Pop();
+
+		bool TryPop(T& item);
+		bool PopFor(T& item, Milliseconds timeout);
+
 		bool Empty() const;
 		size_t Size() const;
 		void Shutdown();
@@ -53,6 +57,45 @@ namespace netscope
 		T item = std::move(m_queue.front());
 		m_queue.pop();
 		return item;
+	}
+
+	template<typename T>
+	inline bool EventQueue<T>::TryPop(T& item)
+	{
+		std::lock_guard lock(m_mutex);
+		if (m_queue.empty())
+		{
+			return false;
+		}
+
+		item = std::move(m_queue.front());
+		m_queue.pop();
+
+		return true;
+	}
+
+	template<typename T>
+	inline bool EventQueue<T>::PopFor(T& item, Milliseconds timeout)
+	{
+		std::unique_lock lock(m_mutex);
+		bool ready = m_condition.wait_for(lock, timeout, 
+			[this] {
+				return m_shutdown || !m_queue.empty();
+			}
+		);
+		if (!ready)
+		{
+			if (m_shutdown)
+			{
+				throw std::runtime_error("Queue shutdown");
+			}
+			return false;
+		}
+
+		item = std::move(m_queue.front());
+		m_queue.pop();
+
+		return true;
 	}
 
 	template<typename T>

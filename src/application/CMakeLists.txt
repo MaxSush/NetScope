@@ -15,6 +15,7 @@ target_link_libraries(NetScopeApplication
     NetScopeFlow
     NetScopePresentation
     NetScopePacketCapture
+    NetScopeStorage
 )
 
 target_compile_features(NetScopeApplication PUBLIC cxx_std_17)

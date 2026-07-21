@@ -7,34 +7,18 @@ namespace netscope
 	{
 	}
 
-	bool CaptureRuntime::Start()
+	bool CaptureRuntime::Initialize()
 	{
-		if (!m_loader.Load(m_queue))
-		{
-			return false;
-		}
-		m_running = true;
+		return m_loader.Load(m_queue);
+	}
 
-		m_pollThread = std::thread([this]()
-			{
-				while (m_running)
-				{
-					m_loader.Poll();
-				}
-			});
-
-		return true;
+	void CaptureRuntime::Run()
+	{
+		m_loader.Poll();
 	}
 
 	void CaptureRuntime::Stop()
 	{
-		m_running = false;
-
-		if (m_pollThread.joinable())
-		{
-			m_pollThread.join();
-		}
-
 		m_loader.Unload();
 	}
 }

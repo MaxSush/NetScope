@@ -10,7 +10,7 @@ namespace netscope
 	public:
 		void HandleEvent(const processing::FlowUpdatedEvent& event) override
 		{
-			LOG_INFO("Flow Updated: PID {}", event.flow.pid);
+			LOG_INFO("Flow Updated: PID {}", event.flowSnapshot.pid);
 		}
 	};
 

@@ -11,15 +11,13 @@ namespace netscope
 	public:
 		CaptureRuntime(EventQueue<NetworkEvent>& queue);
 
-		bool Start();
+		bool Initialize();
+		void Run();
 		void Stop();
 
 	private:
 		EventQueue<NetworkEvent>& m_queue;
 		BPFLoader m_loader;
 
-		std::thread m_pollThread;
-
-		bool m_running = false;
 	};
 }

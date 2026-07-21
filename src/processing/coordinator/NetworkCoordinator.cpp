@@ -12,10 +12,12 @@ namespace netscope::processing
         {
             if (context.flow->IsCreated())
             {
-                if (context.process.has_value()) {
+                if (context.process.has_value()) 
+                {
                     m_flowCreatedBus.Publish({ context.flow->GetSnapshot(), context.process->GetProcess() });
                 }
-                else {
+                else 
+                {
                     process::ProcessInfo unknownProc{};
                     unknownProc.pid = context.input.pid;
                     unknownProc.name = "Unknown";

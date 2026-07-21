@@ -1,7 +1,8 @@
 #include "NetscopeApplication.h"
+#include "NetscopeApplication.h"
 #include <logger/Logger.h>
 #include <Config.h>
-
+#include <schema/SchemaManager.h>
 
 namespace netscope
 {
@@ -11,29 +12,43 @@ namespace netscope
 		m_dispatcher(m_queue, m_pipeline),
 		m_pipeline(m_coordinator),
 		m_processAggregator(m_processManager),
-		m_consoleReporter(m_processAggregator, m_flowManager)
+		m_consoleReporter(m_processAggregator, m_flowManager),
+		m_persistenceService(m_database)
 	{
 		m_pipeline.AddStage(m_flowManager);
 		m_pipeline.AddStage(m_processManager);
 
-		//m_coordinator.Subscribe(m_debug);
+		m_coordinator.Subscribe(m_persistenceService);
 	}
 
 	bool NetscopeApplication::Start()
 	{
-		if (m_capture.Start())
+		if (!InitializeDatabase())
 		{
-			m_running = true;
+			return false;
 		}
-		else
+
+		if (!m_capture.Initialize())
 		{
 			LOG_ERROR("Error starting Capture Runtime");
 			return false;
 		}
+		m_running = true;
+
+		m_persistenceServiceThread = std::thread([this]()
+			{
+				while (m_running)
+				{
+					m_persistenceService.Run();
+				}
+			});
 
 		m_dispatcherThread = std::thread([this]()
 			{
-				m_dispatcher.Run();
+				while (m_running)
+				{
+					m_dispatcher.Run();
+				}
 			});
 
 		m_reportThread = std::thread([this]()
@@ -46,8 +61,16 @@ namespace netscope
 
 					m_consoleReporter.Report();
 
-					size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
-					LOG_WARN("Removed Idle Connections: {}", removed);
+					//size_t removed = m_flowManager.RemoveIdleFlows(FLOW_IDLE_TIMEOUT);
+					//LOG_WARN("Removed Idle Connections: {}", removed);
+				}
+			});
+
+		m_captureRuntimeThread = std::thread([this]() 
+			{
+				while (m_running)
+				{
+					m_capture.Run();
 				}
 			});
 
@@ -61,8 +84,17 @@ namespace netscope
 		m_capture.Stop();
 
 		m_queue.Shutdown();
+		m_persistenceService.Stop();
 
-		m_dispatcher.Stop();
+		if(m_captureRuntimeThread.joinable())
+		{
+			m_captureRuntimeThread.join();
+		}
+
+		if (m_persistenceServiceThread.joinable())
+		{
+			m_persistenceServiceThread.join();
+		}
 
 		if (m_dispatcherThread.joinable())
 		{
@@ -75,5 +107,23 @@ namespace netscope
 		}
 
 	}
+	bool netscope::NetscopeApplication::InitializeDatabase()
+	{
+		auto res = m_database.Open("netscope.db");
+		if (!res)
+		{
+			LOG_ERROR(res.message);
+			return false;
+		}
 
+		storage::SchemaManager schema;
+
+		res = schema.Initialize(m_database);
+		if (!res)
+		{
+			LOG_ERROR(res.message);
+			return false;
+		}
+		return true;
+	}
 }
