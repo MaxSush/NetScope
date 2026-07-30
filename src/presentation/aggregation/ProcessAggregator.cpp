@@ -32,7 +32,7 @@ namespace netscope
 				}
 			}
 			process.statistics += flow.statistics;
-			if (flow.IsIdle(FLOW_IDLE_TIMEOUT))
+			if (flow.IsIdle(config::FLOW_IDLE_TIMEOUT))
 			{
 				++process.idleConnections;
 			}

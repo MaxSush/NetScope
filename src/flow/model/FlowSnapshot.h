@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "FlowKey.h"
 #include "FlowStatistics.h"
+#include "model/FlowState.h"
 #include <time/TimeUtils.h>
 
 namespace netscope::flow
@@ -17,6 +18,10 @@ namespace netscope::flow
 		System_TimePoint lastSeen;
 		
 		Duration IdleTime;
+
+		FlowState state;
+
+		CloseReason closeReason;
 
 		inline bool IsIdle(Duration timeout) const
 		{

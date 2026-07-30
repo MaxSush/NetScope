@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <shared_mutex>
 
+namespace netscope::processing
+{
+	struct LifecycleContext;
+}
+
 namespace netscope::flow
 {
 	class FlowTable
@@ -15,7 +20,7 @@ namespace netscope::flow
 		FlowTable() = default;
 
 		Flow* Find(const FlowKey& key);
-		std::pair<std::reference_wrapper<Flow>, bool> GetOrDefault(const FlowKey& key, const pid_t pid);
+		FlowResult GetOrDefault(const FlowKey& key, const NetworkEvent& event);
 
 		void Remove(const FlowKey& key);
 		void Clear();
@@ -23,7 +28,8 @@ namespace netscope::flow
 		size_t Size() const;
 		bool Empty() const;
 
-		size_t RemoveIdleFlows(Duration timeout);
+		void UpdateFlows(processing::LifecycleContext& context);
+		void CleanUpArchivedFlows();
 
 		std::vector<FlowSnapshot> GetSnapshot() const;
 

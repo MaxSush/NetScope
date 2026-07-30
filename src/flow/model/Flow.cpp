@@ -1,4 +1,7 @@
 #include "Flow.h"
+#include "Flow.h"
+
+#include <Config.h>
 
 namespace netscope::flow
 {
@@ -34,9 +37,9 @@ namespace netscope::flow
 		return m_pid;
 	}
 
-	bool Flow::IsIdle(Duration timeout) const
+	bool Flow::IsIdle(Steady_TimePoint now) const
 	{
-		return (GetIdleTime() >= timeout);
+		return (now - m_lastActivity) >= config::FLOW_IDLE_TIMEOUT;
 	}
 
 	Duration Flow::GetIdleTime() const
@@ -59,7 +62,15 @@ namespace netscope::flow
 		snapshot.lastSeen = m_lastSeen;
 		snapshot.IdleTime = GetIdleTime();
 
+		snapshot.state = m_state;
+		snapshot.closeReason = m_closeReason.value_or(CloseReason::NOT_CLOSED);
+
 		return snapshot;
+	}
+
+	bool Flow::CanArchive(Steady_TimePoint now) const
+	{
+		return now - m_lastActivity >= config::FLOW_ARCHIVE_TIMEOUT;
 	}
 
 }

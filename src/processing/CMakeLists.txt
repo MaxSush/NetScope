@@ -3,7 +3,7 @@ add_library(NetScopeProcessor STATIC
     "dispatcher/PacketDispatcher.cpp"
     
   "activity/FlowUpdatedEvent.h"
-  "context/ProcessingContext.h" "coordinator/NetworkCoordinator.cpp" "pipeline/ProcessingPipeline.h" "pipeline/ProcessingPipeline.cpp" "pipeline/IContextProcessor.h" "activity/FlowCreatedEvent.h")
+  "context/ProcessingContext.h" "coordinator/NetworkCoordinator.cpp" "pipeline/ProcessingPipeline.h" "pipeline/ProcessingPipeline.cpp" "pipeline/IContextProcessor.h" "activity/FlowCreatedEvent.h" "context/LifecycleContext.h" "lifecycle/LifecycleScheduler.h" "lifecycle/LifecycleScheduler.cpp" "lifecycle/ILifecycleProcessor.h" "activity/FlowClosedEvent.h")
 
 target_include_directories(NetScopeProcessor
     PUBLIC

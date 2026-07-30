@@ -1,6 +1,9 @@
 #include "FlowTable.h"
+#include "FlowTable.h"
+#include "FlowTable.h"
 #include <utility>
 #include <mutex>
+#include <context/LifecycleContext.h>
 
 namespace netscope::flow
 {
@@ -16,17 +19,25 @@ namespace netscope::flow
 		return nullptr;
 	}
 
-	std::pair<std::reference_wrapper<Flow>, bool> FlowTable::GetOrDefault(const FlowKey& key, const pid_t pid)
+	FlowResult FlowTable::GetOrDefault(const FlowKey& key, const NetworkEvent& event)
 	{
 		std::lock_guard lock(m_mutex);
 
 		auto it = m_flows.find(key);
 		if (it != m_flows.end())
 		{
-			return std::make_pair(std::ref(it->second), false);
+			FlowChange change = FlowChange::UPDATED;
+			if(it->second.GetState() == FlowState::IDLE)
+			{
+				it->second.SetState(FlowState::ACTIVE);
+				change = FlowChange::RESUMED;
+			}
+			it->second.Update(event);
+			return {std::ref(it->second), change };
 		}
-		auto result = m_flows.emplace(key, Flow(key, pid));
-		return std::make_pair(std::ref(result.first->second), true);
+		auto result = m_flows.emplace(key, Flow(key, event.pid));
+		result.first->second.Update(event);
+		return { std::ref(result.first->second), FlowChange::CREATED};
 	}
 
 	void FlowTable::Remove(const FlowKey& key)
@@ -54,26 +65,41 @@ namespace netscope::flow
 		return m_flows.empty();
 	}
 
-	size_t FlowTable::RemoveIdleFlows(Duration timeout)
+	void FlowTable::UpdateFlows(processing::LifecycleContext& context)
 	{
-		size_t removed = 0;
 		{
 			std::lock_guard lock(m_mutex);
-
-			for (auto it = m_flows.begin(); it != m_flows.end(); )
+			for (auto& [key, flow] : m_flows)
 			{
-				if (it->second.IsIdle(timeout))
+				if (flow.GetState() == FlowState::ACTIVE && flow.IsIdle(context.now))
 				{
-					it = m_flows.erase(it);
-					++removed;
+					flow.SetState(FlowState::IDLE);
+					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::IDLE });
 				}
-				else
+				else if (flow.GetState() == FlowState::CLOSED && flow.CanArchive(context.now))
 				{
-					++it;
+					flow.SetState(FlowState::ARCHIVED);
+					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::ARCHIVED });
 				}
 			}
 		}
-		return removed;
+	}
+
+	void FlowTable::CleanUpArchivedFlows()
+	{
+		std::lock_guard lock(m_mutex);
+
+		for (auto it = m_flows.begin(); it != m_flows.end(); )
+		{
+			if (it->second.GetState() == FlowState::ARCHIVED)
+			{
+				it = m_flows.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
 	}
 
 	std::vector<FlowSnapshot> FlowTable::GetSnapshot() const

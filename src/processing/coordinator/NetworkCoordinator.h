@@ -3,6 +3,8 @@
 #include <event/DomainEventBus.h>
 #include <activity/FlowUpdatedEvent.h>
 #include <activity/FlowCreatedEvent.h>
+#include <activity/FlowClosedEvent.h>
+#include <lifecycle/ILifecycleProcessor.h>
 
 namespace netscope::processing
 {
@@ -12,6 +14,7 @@ namespace netscope::processing
 		NetworkCoordinator();
 
 		void Coordinate(const ProcessingContext& context);
+		void Coordinate(const LifecycleContext& context);
 
 		template<typename TSub>
 		void Subscribe(TSub& subscriber);
@@ -41,6 +44,7 @@ namespace netscope::processing
 
 		core::DomainEventBus<FlowUpdatedEvent> m_flowUpdatedBus;
 		core::DomainEventBus<FlowCreatedEvent> m_flowCreatedBus;
+		core::DomainEventBus<FlowClosedEvent> m_flowClosedBus;
 
 	};
 
@@ -49,6 +53,7 @@ namespace netscope::processing
 	{
 		SubscribeIfSupported<FlowCreatedEvent>(subscriber, m_flowCreatedBus);
 		SubscribeIfSupported<FlowUpdatedEvent>(subscriber, m_flowUpdatedBus);
+		SubscribeIfSupported<FlowClosedEvent>(subscriber, m_flowClosedBus);
 
 	}
 
@@ -57,6 +62,7 @@ namespace netscope::processing
 	{
 		UnsubscribeIfSupported<FlowCreatedEvent>(subscriber, m_flowCreatedBus);
 		UnsubscribeIfSupported<FlowUpdatedEvent>(subscriber, m_flowUpdatedBus);
+		UnsubscribeIfSupported<FlowClosedEvent>(subscriber, m_flowClosedBus);
 
 	}
 

@@ -6,9 +6,12 @@ namespace netscope::flow
 {
 	enum class FlowChange
 	{
-		Created,
-		Updated,
-		Closed        // future
+		CREATED,
+		UPDATED,
+        IDLE,
+        RESUMED,
+        CLOSED,
+        ARCHIVED
 	};
 
 	struct FlowResult
@@ -28,17 +31,17 @@ namespace netscope::flow
 
         bool IsCreated() const
         {
-            return change == FlowChange::Created;
+            return change == FlowChange::CREATED;
         }
 
         bool IsUpdated() const
         {
-            return change == FlowChange::Updated;
+            return change == FlowChange::UPDATED;
         }
 
         bool IsClosed() const
         {
-            return change == FlowChange::Closed;
+            return change == FlowChange::CLOSED;
         }
 
 	};

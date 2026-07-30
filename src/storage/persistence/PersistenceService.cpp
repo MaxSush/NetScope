@@ -1,4 +1,6 @@
 #include "PersistenceService.h"
+#include "PersistenceService.h"
+#include "PersistenceService.h"
 
 #include <unordered_map>
 #include <FlowHash.h>
@@ -91,13 +93,13 @@ namespace netscope::storage
 
 						if (it == flowMap.end())
 						{
-							flowMap.emplace(e.flowSnapshot.key, FlowBatchEntry{ optimized.size(), false });
+							flowMap.emplace(e.flowSnapshot.key, FlowBatchEntry{ optimized.size(), FlowBatchState::UPDATED });
 							optimized.push_back(event);
-							LOG_INFO("Updated");
+							//LOG_INFO("Updated");
 						}
 						else
 						{
-							LOG_INFO("Replacing");
+							//LOG_INFO("Replacing");
 							auto& entry = it->second;
 							if (entry.state == FlowBatchState::CREATED)
 							{
@@ -112,8 +114,8 @@ namespace netscope::storage
 					}
 					else if constexpr (std::is_same_v<T, processing::FlowCreatedEvent>)
 					{
-						LOG_INFO("Created");
-						flowMap.emplace(e.flowSnapshot.key, FlowBatchEntry{ optimized.size(), true });
+						//LOG_INFO("Created");
+						flowMap.emplace(e.flowSnapshot.key, FlowBatchEntry{ optimized.size(), FlowBatchState::CREATED });
 						optimized.push_back(event);
 
 					}
@@ -169,6 +171,11 @@ namespace netscope::storage
 		m_queue.Push(event);
 	}
 
+	void PersistenceService::HandleEvent(const processing::FlowClosedEvent& event)
+	{
+		m_queue.Push(event);
+	}
+
 	DatabaseResult PersistenceService::Persist(const processing::FlowCreatedEvent& event)
 	{
 		auto res = m_processRepository.Upsert(event.process);
@@ -181,6 +188,12 @@ namespace netscope::storage
 
 	DatabaseResult PersistenceService::Persist(const processing::FlowUpdatedEvent& event)
 	{
+		return m_flowRepository.Upsert(event.flowSnapshot);
+	}
+
+	DatabaseResult PersistenceService::Persist(const processing::FlowClosedEvent& event)
+	{
+		// TODO: Handle process cleanup if needed
 		return m_flowRepository.Upsert(event.flowSnapshot);
 	}
 

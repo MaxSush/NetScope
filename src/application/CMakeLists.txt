@@ -1,6 +1,6 @@
 add_library(NetScopeApplication STATIC
     "NetscopeApplication.cpp"
-    "DebugSubscriber.h"
+    
 )
 
 target_include_directories(NetScopeApplication

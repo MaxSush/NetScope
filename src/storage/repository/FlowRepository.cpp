@@ -1,6 +1,5 @@
 #include "FlowRepository.h"
 
-
 namespace netscope::storage
 {
 
@@ -26,11 +25,12 @@ namespace netscope::storage
                 download_packets,
                 first_seen,
                 last_seen,
-                state
+                state,
+                close_reason
             )
             VALUES
             (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON CONFLICT
             (
@@ -47,7 +47,8 @@ namespace netscope::storage
                 upload_packets = excluded.upload_packets,
                 download_packets = excluded.download_packets,
                 last_seen = excluded.last_seen,
-                state = excluded.state;
+                state = excluded.state,
+                close_reason = excluded.close_reason;
 		)sql";
 
         std::unique_ptr<Statement> statement;
@@ -105,8 +106,11 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        //TODO: Save state of  flow
-        result = statement->Bind(13, 0);
+        result = statement->Bind(13, flow::ToFlowStateString(flowSnapshot.state));
+        if (!result)
+            return result;
+
+        result = statement->Bind(14, flow::ToCloseReasonString(flowSnapshot.closeReason));
         if (!result)
             return result;
 

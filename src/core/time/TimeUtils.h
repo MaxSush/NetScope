@@ -13,6 +13,7 @@ namespace netscope
 	using Duration = Steady_Clock::duration;
 
 	using Milliseconds = std::chrono::milliseconds;
+	using Seconds = std::chrono::seconds;
 
 	inline int64_t ToUnixMilliseconds(System_TimePoint time)
 	{

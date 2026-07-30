@@ -74,7 +74,9 @@ namespace netscope::storage
 
 				last_seen INTEGER NOT NULL,
 
-				state INTEGER NOT NULL,
+				state TEXT NOT NULL,
+
+				close_reason TEXT NOT NULL,
 
 				FOREIGN KEY(process_id)
 					REFERENCES Processes(process_id)

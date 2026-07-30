@@ -1,15 +1,23 @@
 #include "FlowManager.h"
+#include "FlowManager.h"
+
+#include <context/LifecycleContext.h>
 
 namespace netscope::flow
 {
-	size_t FlowManager::RemoveIdleFlows(Duration timeout)
-	{
-		return m_Table.RemoveIdleFlows(timeout);
-	}
-
 	void FlowManager::Process(processing::ProcessingContext& context)
 	{
 		context.flow = Update(context.input);
+	}
+
+	void FlowManager::Process(processing::LifecycleContext& context)
+	{
+		m_Table.UpdateFlows(context);
+	}
+
+	void FlowManager::CleanUpArchived()
+	{
+		m_Table.CleanUpArchivedFlows();
 	}
 
 	FlowResult FlowManager::Update(const NetworkEvent& event)
@@ -26,10 +34,7 @@ namespace netscope::flow
 
 		FlowKey key = FlowKey::Create(source, destination, event.protocol);
 
-		auto [flow, created] = m_Table.GetOrDefault(key, event.pid);
-		flow.get().Update(event);
-
-		return { flow, (created) ? FlowChange::Created : FlowChange::Updated };
+		return m_Table.GetOrDefault(key, event);
 	}
 
 	std::vector<FlowSnapshot> FlowManager::GetSnapshot() const
@@ -41,5 +46,4 @@ namespace netscope::flow
 	{
 		m_Table.Clear();
 	}
-
 }

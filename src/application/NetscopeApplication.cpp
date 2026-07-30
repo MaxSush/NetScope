@@ -1,5 +1,4 @@
 #include "NetscopeApplication.h"
-#include "NetscopeApplication.h"
 #include <logger/Logger.h>
 #include <Config.h>
 #include <schema/SchemaManager.h>
@@ -13,10 +12,14 @@ namespace netscope
 		m_pipeline(m_coordinator),
 		m_processAggregator(m_processManager),
 		m_consoleReporter(m_processAggregator, m_flowManager),
-		m_persistenceService(m_database)
+		m_persistenceService(m_database),
+		m_lifecycleScheduler(m_coordinator)
 	{
 		m_pipeline.AddStage(m_flowManager);
 		m_pipeline.AddStage(m_processManager);
+
+		m_lifecycleScheduler.AddProcessor(m_flowManager);
+		//m_lifecycleScheduler.AddProcessor(m_processManager);
 
 		m_coordinator.Subscribe(m_persistenceService);
 	}
@@ -47,7 +50,26 @@ namespace netscope
 			{
 				while (m_running)
 				{
+					LOG_TRACE("LifecycleScheduler tick");
+
 					m_dispatcher.Run();
+				}
+			});
+
+		m_lifecycleThread = std::thread([this]()
+			{
+				while (m_running)
+				{
+					std::this_thread::sleep_for(config::LIFECYCLE_SCHEDULER_INTERVAL);
+					
+					if (!m_running)
+					{
+						break;
+					}
+					
+					LOG_TRACE("LifecycleScheduler tick");
+
+					m_lifecycleScheduler.Process();
 				}
 			});
 

@@ -1,13 +1,16 @@
-
-add_executable(NetscopeTests
-    "SQLiteDatabaseTest.cpp"
+add_executable(NetScopeTests
+    flow/FlowTests.cpp
+    flow/FlowTableTests.cpp
+    coordinator/CoordinatorTests.cpp
 )
 
-target_link_libraries(NetscopeTests 
-    PRIVATE 
-        NetScopeStorage
-        NetScopeCore
-        NetScopeProcess
+target_link_libraries(NetScopeTests
+    PRIVATE
+        GTest::gtest_main
+        NetScopeFlow     
+        NetScopeProcess    
+        NetScopeCore       
 )
 
-add_test(NAME CoreLibraryTests COMMAND NetscopeTests)
+include(GoogleTest)
+gtest_discover_tests(NetScopeTests)
