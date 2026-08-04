@@ -1,16 +1,23 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-declarations"
 #include "vmlinux.h"
+#pragma clang diagnostic pop
+
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_endian.h>
 
-#include "packet_event.h"
+#include "bpf_network_event.h"
+
+#define PACKET	0
+#define CONNECTION_CLOSE	1
 
 #define DIRECTION_IN   0
 #define DIRECTION_OUT  1
 
-#define AF_INET   2
-#define AF_INET6 10
+#define AF_INET		2
+#define AF_INET6	10
 
 struct
 {
@@ -24,7 +31,7 @@ int BPF_PROG(trace_send, struct sock *sk, struct msghdr *msg, size_t size, size_
 {
 	u64 pid_tgid;
 	u32 pid;
-	struct packet_event* event;
+	struct bpf_network_event* event;
 
 	pid_tgid = bpf_get_current_pid_tgid();
 	pid = pid_tgid >> 32;
@@ -37,12 +44,14 @@ int BPF_PROG(trace_send, struct sock *sk, struct msghdr *msg, size_t size, size_
 	}
 	event->pid = pid;
 	event->tid = tid;
-	event->bytes = size;
-	event->direction = DIRECTION_OUT;
+
+	event->type = PACKET;
 	event->protocol = IPPROTO_TCP;
 	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
-	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
-	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+
+
+	event->data.packet.bytes = size;
+	event->data.packet.direction = DIRECTION_OUT;
 
 	if (event->family == AF_INET)
 	{
@@ -53,6 +62,9 @@ int BPF_PROG(trace_send, struct sock *sk, struct msghdr *msg, size_t size, size_
 	{
 		/* TODO: IPv6 */
 	}
+
+	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
+	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
 
 	bpf_ringbuf_submit(event, 0);
 
@@ -69,7 +81,7 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 	u64 pid_tgid;
 	u32 pid;
 
-	struct packet_event* event;
+	struct bpf_network_event* event;
 
 	pid_tgid = bpf_get_current_pid_tgid();
 
@@ -85,12 +97,14 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 
 	event->pid = pid;
 	event->tid = tid;
-	event->direction = DIRECTION_IN;
-	event->bytes = ret;
+
+	event->type = PACKET;
 	event->protocol = IPPROTO_TCP;
 	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
-	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
-	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+
+	event->data.packet.bytes = ret;
+	event->data.packet.direction = DIRECTION_IN;
+
 	if (event->family == AF_INET)
 	{
 		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
@@ -100,6 +114,9 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 	{
 		/* TODO: IPv6 */
 	}
+
+	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
+	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
 
 	bpf_ringbuf_submit(event, 0);
 

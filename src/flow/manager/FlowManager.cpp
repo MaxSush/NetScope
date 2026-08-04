@@ -1,27 +1,14 @@
 #include "FlowManager.h"
-#include "FlowManager.h"
 
 #include <context/LifecycleContext.h>
+#include <stdexcept>
 
 namespace netscope::flow
 {
 	void FlowManager::Process(processing::ProcessingContext& context)
 	{
-		context.flow = Update(context.input);
-	}
+		const NetworkEvent& event = context.input;
 
-	void FlowManager::Process(processing::LifecycleContext& context)
-	{
-		m_Table.UpdateFlows(context);
-	}
-
-	void FlowManager::CleanUpArchived()
-	{
-		m_Table.CleanUpArchivedFlows();
-	}
-
-	FlowResult FlowManager::Update(const NetworkEvent& event)
-	{
 		Endpoint source{
 			event.sourceAddress,
 			event.sourcePort
@@ -33,8 +20,27 @@ namespace netscope::flow
 		};
 
 		FlowKey key = FlowKey::Create(source, destination, event.protocol);
+		switch (context.input.type)
+		{
+		[[likely]] case NetworkEventType::PACKET:
+			context.flow = m_Table.GetOrDefault(key, event);
+			break;
+		[[unlikely]]  case NetworkEventType::CONNECTIONCLOSED:
+			context.flow = m_Table.CloseFlow(key, context.input.closeReason.value_or(CloseReason::UNKNOWN));
+			break;
+		default:
+			std::runtime_error("Unsupported NetworkEventType");
+		}
+	}
 
-		return m_Table.GetOrDefault(key, event);
+	void FlowManager::Process(processing::LifecycleContext& context)
+	{
+		m_Table.UpdateFlowLifeCycle(context);
+	}
+
+	void FlowManager::CleanUpArchived()
+	{
+		m_Table.CleanUpArchivedFlows();
 	}
 
 	std::vector<FlowSnapshot> FlowManager::GetSnapshot() const

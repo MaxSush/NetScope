@@ -12,7 +12,7 @@ add_custom_command(
 
     COMMAND clang -target bpf -D__TARGET_ARCH_x86 -O2 -g -I${CMAKE_CURRENT_SOURCE_DIR} -I${LIBBPF_INCLUDE_DIRS} -c ${BPF_SOURCE} -o ${BPF_OBJECT}
 
-    DEPENDS ${BPF_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/vmlinux.h ${CMAKE_CURRENT_SOURCE_DIR}/packet_event.h
+    DEPENDS ${BPF_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/vmlinux.h ${CMAKE_CURRENT_SOURCE_DIR}/bpf_network_event.h
 
     COMMENT "Building BPF programs"
 )

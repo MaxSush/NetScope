@@ -13,17 +13,70 @@ using namespace netscope;
 inline NetworkEvent CreateDummyPacket(pid_t pid = 1234)
 {
     return NetworkEvent{
-        pid,                    // pid
-        1235,                   // ppid
-        100,                    // length/bytes
-        Protocol::TCP,          // protocol
-        Direction::OUTGOING,    // direction
-        AddressFamily::IPv4,    // family
-        8080,                   // sourcePort
-        443,                    // destinationPort
-        IPAddress::IPv4(0xC0A80101), // sourceAddress (192.168.1.1)
-        IPAddress::IPv4(0x08080808)  // destinationAddress (8.8.8.8)
+        pid,                                 // pid
+        1235,                                // tid
+        100,                                 // bytes
+        NetworkEventType::PACKET,            // type
+        std::nullopt,                        // closeReason
+        flow::Protocol::TCP,                 // protocol
+        Direction::OUTGOING,                 // direction
+        flow::AddressFamily::IPv4,           // family
+        8080,                                // sourcePort
+        443,                                 // destinationPort
+        flow::IPAddress::IPv4(0xC0A80101),   // sourceAddress (192.168.1.1)
+        flow::IPAddress::IPv4(0x08080808)    // destinationAddress (8.8.8.8)
     };
+}
+
+// And the new close event helper based on the updated struct
+inline NetworkEvent CreateDummyCloseEvent(CloseReason reason = CloseReason::TCP_FIN, pid_t pid = 1234)
+{
+    NetworkEvent event = CreateDummyPacket(pid);
+
+    // Override the packet defaults to represent a closed event
+    event.type = NetworkEventType::CONNECTIONCLOSED;
+    event.closeReason = reason;
+    event.bytes = 0; // A pure state-change event doesn't carry payload bytes
+
+    return event;
+}
+
+TEST(FlowTableTests, CloseExistingFlowReturnsClosed)
+{
+    FlowTable table;
+    NetworkEvent packet = CreateDummyPacket();
+    Endpoint src{ packet.sourceAddress, packet.sourcePort };
+    Endpoint dst{ packet.destinationAddress, packet.destinationPort };
+    FlowKey key = FlowKey::Create(src, dst, packet.protocol);
+
+    // 1. Send normal packet (State becomes ACTIVE)
+    table.GetOrDefault(key, packet);
+
+    // 2. Simulate the kernel sending a FIN
+    FlowResult result = table.CloseFlow(key, CloseReason::TCP_FIN);
+
+    // 3. Verify
+    EXPECT_EQ(result.change, FlowChange::CLOSED);
+    EXPECT_EQ(result.GetFlow().GetState(), FlowState::CLOSED);
+
+    // (Optional: If you added a getter to your Flow class)
+    // EXPECT_EQ(result.GetFlow().GetCloseReason(), CloseReason::TCP_FIN);
+}
+
+TEST(FlowTableTests, CloseNonExistentFlowCreatesClosedFlow)
+{
+    FlowTable table;
+    NetworkEvent closeEvent = CreateDummyCloseEvent(CloseReason::TCP_RESET);
+    Endpoint src{ closeEvent.sourceAddress, closeEvent.sourcePort };
+    Endpoint dst{ closeEvent.destinationAddress, closeEvent.destinationPort };
+    FlowKey key = FlowKey::Create(src, dst, closeEvent.protocol);
+
+    // We never sent a packet, we just immediately call CloseFlow
+    FlowResult result = table.CloseFlow(key, closeEvent.closeReason.value());
+
+    // It should safely create the flow directly into the CLOSED state
+    EXPECT_EQ(result.change, FlowChange::CLOSED);
+    EXPECT_EQ(result.GetFlow().GetState(), FlowState::CLOSED);
 }
 
 TEST(FlowTableTests, NewFlowReturnsCreated)
@@ -94,7 +147,7 @@ TEST(FlowTableTests, LifecycleTickMarksFlowIdle)
     LifecycleContext context(futureTime);
 
     // Run the lifecycle tick
-    table.UpdateFlows(context);
+    table.UpdateFlowLifeCycle(context);
 
     // Verify the context captured the state change
     ASSERT_EQ(context.flowChanges.size(), 1);

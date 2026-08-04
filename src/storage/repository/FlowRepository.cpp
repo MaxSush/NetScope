@@ -110,7 +110,7 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        result = statement->Bind(14, flow::ToCloseReasonString(flowSnapshot.closeReason));
+        result = statement->Bind(14, ToCloseReasonString(flowSnapshot.closeReason));
         if (!result)
             return result;
 

@@ -1,6 +1,6 @@
 #include "BpfLoader.h"
 
-#include "shared/PacketEvent.h"
+#include "shared/BpfNetworkEvent.h"
 #include "shared/NetworkEvent.h"
 
 #include <bpf/libbpf.h>
@@ -11,22 +11,43 @@ namespace netscope
 	static int HandleEvent(void* ctx, void* data, size_t size)
 	{
 		auto* queue = static_cast<EventQueue<NetworkEvent>*>(ctx);
-		auto* packet = static_cast<PacketEvent*>(data);
+		auto* packet = static_cast<BpfNetworkEvent*>(data);
 
 		//TODO: appropriate conversion PacketEvent ==> NetworkEvent
 
 		NetworkEvent event{};
+
 		event.pid = packet->pid;
 		event.tid = packet->tid;
 
-		event.bytes = packet->bytes;
-		
 		event.protocol = flow::ToProtocol(packet->protocol);
 		event.family = flow::AddressFamily::IPv4;
-		event.direction = (packet->direction == 0) ? Direction::INCOMMING : Direction::OUTGOING;
 
 		event.sourcePort = packet->source_port;
 		event.destinationPort = packet->destination_port;
+		
+		if (packet->type == 0)  // Packet
+		{
+			event.type = NetworkEventType::PACKET;
+			event.bytes = packet->data.packet.bytes;
+			event.direction = (packet->data.packet.direction == 0) ? Direction::INCOMMING : Direction::OUTGOING;
+		}
+		else if (packet->type == 1)  // Connection closed
+		{
+			event.type = NetworkEventType::CONNECTIONCLOSED;
+
+			switch (packet->data.close.closeReason)
+			{
+				case 0: event.closeReason = CloseReason::TCP_FIN; 
+					break;
+				case 1: event.closeReason = CloseReason::TCP_RESET; 
+					break;
+				default: event.closeReason = CloseReason::UNKNOWN; 
+					break;
+			}
+		}
+		
+
 
 		if (event.family == flow::AddressFamily::IPv4)
 		{

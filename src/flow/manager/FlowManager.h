@@ -12,11 +12,9 @@ namespace netscope::flow
 		FlowManager() = default;
 
 		void Process(processing::ProcessingContext& context) override;
-
 		void Process(processing::LifecycleContext& context) override;
-		void CleanUpArchived() override;
 
-		FlowResult Update(const NetworkEvent& event);
+		void CleanUpArchived() override;
 
 		std::vector<FlowSnapshot> GetSnapshot() const;
 

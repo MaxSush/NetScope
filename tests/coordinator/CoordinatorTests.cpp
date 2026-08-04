@@ -21,17 +21,32 @@ using namespace netscope;
 inline NetworkEvent CreateDummyPacket(pid_t pid = 1234)
 {
     return NetworkEvent{
-        pid,                    // pid
-        1235,                   // ppid
-        100,                    // length/bytes
-        Protocol::TCP,          // protocol
-        Direction::OUTGOING,    // direction
-        AddressFamily::IPv4,    // family
-        8080,                   // sourcePort
-        443,                    // destinationPort
-        IPAddress::IPv4(0xC0A80101), // sourceAddress (192.168.1.1)
-        IPAddress::IPv4(0x08080808)  // destinationAddress (8.8.8.8)
+        pid,                                 // pid
+        1235,                                // tid
+        100,                                 // bytes
+        NetworkEventType::PACKET,            // type
+        std::nullopt,                        // closeReason
+        flow::Protocol::TCP,                 // protocol
+        Direction::OUTGOING,                 // direction
+        flow::AddressFamily::IPv4,           // family
+        8080,                                // sourcePort
+        443,                                 // destinationPort
+        flow::IPAddress::IPv4(0xC0A80101),   // sourceAddress (192.168.1.1)
+        flow::IPAddress::IPv4(0x08080808)    // destinationAddress (8.8.8.8)
     };
+}
+
+// And the new close event helper based on the updated struct
+inline NetworkEvent CreateDummyCloseEvent(CloseReason reason = CloseReason::TCP_FIN, pid_t pid = 1234)
+{
+    NetworkEvent event = CreateDummyPacket(pid);
+
+    // Override the packet defaults to represent a closed event
+    event.type = NetworkEventType::CONNECTIONCLOSED;
+    event.closeReason = reason;
+    event.bytes = 0; // A pure state-change event doesn't carry payload bytes
+
+    return event;
 }
 
 // --- Mock Subscribers ---
@@ -128,24 +143,47 @@ TEST(NetworkCoordinatorTests, LifecycleContext_PublishesFlowUpdatedOnIdle)
     EXPECT_EQ(mockUpdated.count, 1);
 }
 
-TEST(NetworkCoordinatorTests, LifecycleContext_PublishesFlowClosedOnArchive)
+//TEST(NetworkCoordinatorTests, LifecycleContext_PublishesFlowClosedOnArchive)
+//{
+//    NetworkCoordinator coordinator;
+//    MockClosedSubscriber mockClosed;
+//    coordinator.Subscribe(mockClosed);
+//
+//    LifecycleContext context(std::chrono::steady_clock::now());
+//
+//    NetworkEvent dummyInput = CreateDummyPacket();
+//    Endpoint src{ dummyInput.sourceAddress, dummyInput.sourcePort };
+//    Endpoint dst{ dummyInput.destinationAddress, dummyInput.destinationPort };
+//    Flow dummyFlow(FlowKey::Create(src, dst, dummyInput.protocol), dummyInput.pid);
+//
+//    // Simulate the Lifecycle thread confirming archival
+//    context.flowChanges.push_back(FlowResult{ std::cref(dummyFlow), FlowChange::ARCHIVED });
+//
+//    coordinator.Coordinate(context);
+//
+//    // An ARCHIVED change should be broadcasted as Closed so the DB finalizes the row
+//    EXPECT_EQ(mockClosed.count, 1);
+//}
+
+TEST(NetworkCoordinatorTests, ProcessingContext_PublishesFlowClosedEvent)
 {
     NetworkCoordinator coordinator;
     MockClosedSubscriber mockClosed;
     coordinator.Subscribe(mockClosed);
 
-    LifecycleContext context(std::chrono::steady_clock::now());
+    NetworkEvent dummyClose = CreateDummyCloseEvent(CloseReason::TCP_RESET);
+    ProcessingContext context(dummyClose);
 
-    NetworkEvent dummyInput = CreateDummyPacket();
-    Endpoint src{ dummyInput.sourceAddress, dummyInput.sourcePort };
-    Endpoint dst{ dummyInput.destinationAddress, dummyInput.destinationPort };
-    Flow dummyFlow(FlowKey::Create(src, dst, dummyInput.protocol), dummyInput.pid);
+    Endpoint src{ dummyClose.sourceAddress, dummyClose.sourcePort };
+    Endpoint dst{ dummyClose.destinationAddress, dummyClose.destinationPort };
+    Flow dummyFlow(FlowKey::Create(src, dst, dummyClose.protocol), dummyClose.pid);
 
-    // Simulate the Lifecycle thread confirming archival
-    context.flowChanges.push_back(FlowResult{ std::cref(dummyFlow), FlowChange::ARCHIVED });
+    // Simulate FlowManager successfully returning the CLOSED state
+    context.flow = FlowResult{ std::cref(dummyFlow), FlowChange::CLOSED };
 
+    // Act
     coordinator.Coordinate(context);
 
-    // An ARCHIVED change should be broadcasted as Closed so the DB finalizes the row
+    // Assert
     EXPECT_EQ(mockClosed.count, 1);
 }

@@ -33,6 +33,9 @@ namespace netscope::processing
 			case flow::FlowChange::RESUMED:
 				m_flowUpdatedBus.Publish({ context.flow->GetSnapshot() });
 				break;
+			case flow::FlowChange::CLOSED:
+				m_flowClosedBus.Publish({ context.flow->GetSnapshot() });
+				break;
 			default:
 				break;
             }
@@ -49,7 +52,7 @@ namespace netscope::processing
 				m_flowUpdatedBus.Publish({ flow.GetSnapshot() });
 				break;
 			case flow::FlowChange::ARCHIVED:
-				m_flowClosedBus.Publish({ flow.GetSnapshot() });
+				//m_flowClosedBus.Publish({ flow.GetSnapshot() });
                 break;
             }
 		}
