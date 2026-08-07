@@ -29,7 +29,7 @@ namespace netscope::flow
 			context.flow = m_Table.CloseFlow(key, context.input.closeReason.value_or(CloseReason::UNKNOWN));
 			break;
 		default:
-			std::runtime_error("Unsupported NetworkEventType");
+			throw std::runtime_error("Unsupported NetworkEventType");
 		}
 	}
 

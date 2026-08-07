@@ -38,30 +38,24 @@ namespace netscope::flow
 		return { std::ref(result.first->second), FlowChange::CREATED};
 	}
 
-	FlowResult FlowTable::CloseFlow(const FlowKey& key, netscope::CloseReason reason)
+	std::optional<FlowResult> FlowTable::CloseFlow(const FlowKey& key, netscope::CloseReason reason)
 	{
 		std::lock_guard lock(m_mutex);
 
 		auto it = m_flows.find(key);
-		if (it != m_flows.end())
+		if (it == m_flows.end())
 		{
-			// Don't close if it's already closed or archived
-			if (it->second.GetState() != FlowState::CLOSED && it->second.GetState() != FlowState::ARCHIVED)
-			{
-				it->second.SetState(FlowState::CLOSED);
-				it->second.SetCloseReason(reason);
-				return { std::ref(it->second), FlowChange::CLOSED };
-			}
-			// It was already closed, just return UPDATED
-			return { std::ref(it->second), FlowChange::UPDATED };
+			return std::nullopt;
+		}
+		if (it->second.GetState() == FlowState::CLOSED || it->second.GetState() == FlowState::ARCHIVED)
+		{
+			std::nullopt;
 		}
 
-		// Edge Case: Kernel sends FIN/RST for a flow we didn't catch the SYN for.
-		// Create it directly into the CLOSED state so the DB still has a record of it.
-		auto result = m_flows.emplace(key, Flow(key, -1));
-		result.first->second.SetState(FlowState::CLOSED);
-		result.first->second.SetCloseReason(reason);
-		return { std::ref(result.first->second), FlowChange::CLOSED };
+		it->second.SetState(FlowState::CLOSED);
+		it->second.SetCloseReason(reason);
+		
+		return FlowResult{ std::ref(it->second), FlowChange::CLOSED };
 	}
 
 	void FlowTable::Remove(const FlowKey& key)

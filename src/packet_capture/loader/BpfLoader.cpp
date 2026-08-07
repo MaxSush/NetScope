@@ -98,6 +98,17 @@ namespace netscope
 			return false;
 		}
 
+		bpf_program* tcp_state_program = bpf_object__find_program_by_name(object, "trace_set_state");
+		if (!tcp_state_program)
+		{
+			return false;
+		}
+		stateLink = bpf_program__attach(tcp_state_program);
+		if (!stateLink)
+		{
+			return false;
+		}
+
 		bpf_map* map = bpf_object__find_map_by_name(object, "events");
 		ringBuffer = ring_buffer__new(bpf_map__fd(map), HandleEvent, &queue, nullptr);
 
@@ -122,6 +133,12 @@ namespace netscope
 		{
 			bpf_link__destroy(sendLink);
 			sendLink = nullptr;
+		}
+
+		if (stateLink)
+		{
+			bpf_link__destroy(stateLink);
+			stateLink = nullptr;
 		}
 
 		if (object)

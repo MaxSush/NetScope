@@ -123,5 +123,45 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 	return 0;
 }
 
-char LICENSE[] SEC("license") = "GPL";
+SEC("fentry/tcp_set_state")
+int BPF_PROG(trace_set_state, struct sock* sk, int state)
+{
+	if (state != TCP_CLOSE)
+	{
+		return 0;
+	}
 
+	struct bpf_network_event* event;
+
+	event = bpf_ringbuf_reserve(&events, sizeof(*event), 0);
+	if (!event)
+	{
+		return 0;
+	}
+
+	event->type = CONNECTION_CLOSE;
+	event->protocol = BPF_CORE_READ(sk, sk_protocol);
+	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
+
+	if (event->family == AF_INET)
+	{
+		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+	}
+	else
+	{
+		/* TODO: IPv6 */
+	}
+
+	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
+	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+	// TODO: Add close reason
+	event->data.close.closeReason = 0;
+
+	bpf_ringbuf_submit(event, 0);
+
+
+	return 0;
+}
+
+char LICENSE[] SEC("license") = "GPL";

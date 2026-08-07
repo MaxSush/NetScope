@@ -22,6 +22,6 @@ namespace netscope
 		ring_buffer* ringBuffer = nullptr;
 		bpf_link* sendLink = nullptr;
 		bpf_link* recvLink = nullptr;
-
+		bpf_link* stateLink = nullptr;
 	};
 }

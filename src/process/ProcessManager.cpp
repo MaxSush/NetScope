@@ -12,6 +12,10 @@ namespace netscope::process
 {
 	void ProcessManager::Process(processing::ProcessingContext& context)
 	{
+		if (context.input.type != NetworkEventType::PACKET)
+		{
+			return;
+		}
 		context.process = Resolve(context.input.pid).value();
 	}
 

@@ -119,6 +119,31 @@ namespace netscope::storage
 						optimized.push_back(event);
 
 					}
+					else if constexpr (std::is_same_v<T, processing::FlowClosedEvent>)
+					{
+						//LOG_INFO("Closed");
+						auto it = flowMap.find(e.flowSnapshot.key);
+						if (it == flowMap.end())
+						{
+							flowMap.emplace(e.flowSnapshot.key, FlowBatchEntry{ optimized.size(), FlowBatchState::CLOSED });
+							optimized.push_back(event);
+						}
+						else
+						{
+							auto& entry = it->second;
+							if (entry.state == FlowBatchState::CREATED)
+							{
+								optimized.push_back(event);
+								entry.index = optimized.size() - 1;
+								entry.state = FlowBatchState::CLOSED;
+							}
+							else
+							{
+								optimized[entry.index] = event;
+								entry.state = FlowBatchState::CLOSED;
+							}
+						}
+					}
 				},
 				event
 			);
@@ -194,8 +219,7 @@ namespace netscope::storage
 	DatabaseResult PersistenceService::Persist(const processing::FlowClosedEvent& event)
 	{
 		// TODO: Handle process cleanup if needed
+		LOG_INFO("Flow state: %s", flow::ToFlowStateString(event.flowSnapshot.state));
 		return m_flowRepository.Upsert(event.flowSnapshot);
 	}
-
-
 }

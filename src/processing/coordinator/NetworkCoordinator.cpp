@@ -2,6 +2,7 @@
 
 #include <context/LifecycleContext.h>
 #include <storage/FlowResult.h>
+#include <iostream>
 
 
 namespace netscope::processing
@@ -50,6 +51,9 @@ namespace netscope::processing
             {
             case flow::FlowChange::IDLE:
 				m_flowUpdatedBus.Publish({ flow.GetSnapshot() });
+				break;
+			case flow::FlowChange::CLOSED:
+				m_flowClosedBus.Publish({ flow.GetSnapshot() });
 				break;
 			case flow::FlowChange::ARCHIVED:
 				//m_flowClosedBus.Publish({ flow.GetSnapshot() });
