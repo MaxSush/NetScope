@@ -25,6 +25,8 @@ namespace netscope
             struct
             {
                 uint8_t closeReason;
+                uint8_t shutdownMask;
+                uint32_t err;
             } close;
         } data;
 

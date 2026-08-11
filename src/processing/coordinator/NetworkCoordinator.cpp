@@ -55,8 +55,7 @@ namespace netscope::processing
 			case flow::FlowChange::CLOSED:
 				m_flowClosedBus.Publish({ flow.GetSnapshot() });
 				break;
-			case flow::FlowChange::ARCHIVED:
-				//m_flowClosedBus.Publish({ flow.GetSnapshot() });
+			default:
                 break;
             }
 		}

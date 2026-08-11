@@ -13,8 +13,6 @@ namespace netscope
 		auto* queue = static_cast<EventQueue<NetworkEvent>*>(ctx);
 		auto* packet = static_cast<BpfNetworkEvent*>(data);
 
-		//TODO: appropriate conversion PacketEvent ==> NetworkEvent
-
 		NetworkEvent event{};
 
 		event.pid = packet->pid;
@@ -36,18 +34,36 @@ namespace netscope
 		{
 			event.type = NetworkEventType::CONNECTIONCLOSED;
 
-			switch (packet->data.close.closeReason)
+			int err = packet->data.close.err;
+			int shutdown_mask = packet->data.close.shutdownMask;
+			event.close.kernelError = err;
+			event.close.shutdownMask = shutdown_mask;
+
+			if (err == 111)
 			{
-				case 0: event.closeReason = CloseReason::TCP_FIN; 
-					break;
-				case 1: event.closeReason = CloseReason::TCP_RESET; 
-					break;
-				default: event.closeReason = CloseReason::UNKNOWN; 
-					break;
+				event.close.closeReason = CloseReason::CONNECTION_REFUSED;
+			}
+			else if (err == 104)
+			{
+				event.close.closeReason = CloseReason::TCP_RESET;
+			} 
+			else if (err == 110)
+			{
+				event.close.closeReason = CloseReason::TCP_TIMEOUT;
+			}
+			else if (err != 0)
+			{
+				event.close.closeReason = CloseReason::KERNEL_ERROR;
+			}
+			else if (shutdown_mask & 3)
+			{
+				event.close.closeReason = CloseReason::TCP_FIN;
+			}
+			else
+			{
+				event.close.closeReason = CloseReason::UNKNOWN;
 			}
 		}
-		
-
 
 		if (event.family == flow::AddressFamily::IPv4)
 		{

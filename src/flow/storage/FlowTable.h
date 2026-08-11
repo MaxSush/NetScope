@@ -22,7 +22,7 @@ namespace netscope::flow
 		Flow* Find(const FlowKey& key);
 		FlowResult GetOrDefault(const FlowKey& key, const NetworkEvent& event);
 
-		std::optional<FlowResult> CloseFlow(const FlowKey& key, netscope::CloseReason reason);
+		std::optional<FlowResult> CloseFlow(const FlowKey& key, FlowTerminationInfo info);
 
 		void Remove(const FlowKey& key);
 		void Clear();
@@ -31,7 +31,7 @@ namespace netscope::flow
 		bool Empty() const;
 
 		void UpdateFlowLifeCycle(processing::LifecycleContext& context);
-		void CleanUpArchivedFlows();
+		void CleanUpClosedFlows(Steady_TimePoint now);
 
 		std::vector<FlowSnapshot> GetSnapshot() const;
 

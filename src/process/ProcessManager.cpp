@@ -1,4 +1,8 @@
 #include "ProcessManager.h"
+#include "ProcessManager.h"
+#include "ProcessManager.h"
+#include "ProcessManager.h"
+#include "ProcessManager.h"
 
 #include <filesystem>
 #include <fstream>
@@ -17,6 +21,15 @@ namespace netscope::process
 			return;
 		}
 		context.process = Resolve(context.input.pid).value();
+	}
+
+	void ProcessManager::Process(processing::LifecycleContext& context)
+	{
+		// TODO: Process Exited logic
+	}
+
+	void ProcessManager::CleanUpExpired(Steady_TimePoint now)
+	{
 	}
 
 	std::vector<ProcessInfo> ProcessManager::GetProcesses() const
@@ -158,6 +171,5 @@ namespace netscope::process
 
 		return info;
 	}
-
 }
 

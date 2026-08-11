@@ -2,6 +2,7 @@
 #include <utility>
 #include <mutex>
 #include <context/LifecycleContext.h>
+#include <unordered_set>
 
 namespace netscope::flow
 {
@@ -24,6 +25,12 @@ namespace netscope::flow
 		auto it = m_flows.find(key);
 		if (it != m_flows.end())
 		{
+			// Flow Already Closed
+			if (it->second.GetState() == FlowState::CLOSED)
+			{
+				return { std::ref(it->second), FlowChange::UPDATED };
+			}
+
 			FlowChange change = FlowChange::UPDATED;
 			if(it->second.GetState() == FlowState::IDLE)
 			{
@@ -38,7 +45,7 @@ namespace netscope::flow
 		return { std::ref(result.first->second), FlowChange::CREATED};
 	}
 
-	std::optional<FlowResult> FlowTable::CloseFlow(const FlowKey& key, netscope::CloseReason reason)
+	std::optional<FlowResult> FlowTable::CloseFlow(const FlowKey& key, FlowTerminationInfo info)
 	{
 		std::lock_guard lock(m_mutex);
 
@@ -47,13 +54,14 @@ namespace netscope::flow
 		{
 			return std::nullopt;
 		}
-		if (it->second.GetState() == FlowState::CLOSED || it->second.GetState() == FlowState::ARCHIVED)
+
+		if (it->second.GetState() == FlowState::CLOSED)
 		{
-			std::nullopt;
+			return std::nullopt;
 		}
 
 		it->second.SetState(FlowState::CLOSED);
-		it->second.SetCloseReason(reason);
+		it->second.SetCloseInfo(info);
 		
 		return FlowResult{ std::ref(it->second), FlowChange::CLOSED };
 	}
@@ -87,29 +95,66 @@ namespace netscope::flow
 	{
 		{
 			std::lock_guard lock(m_mutex);
+
+			std::unordered_set<uint32_t> exitedSet(context.exitedPids.begin(), context.exitedPids.end());
+
 			for (auto& [key, flow] : m_flows)
 			{
+				if (flow.GetState() == FlowState::CLOSED)
+				{
+					continue;
+				}
+
+				// Process Exit detection
+				if (!exitedSet.empty() && exitedSet.count(flow.GetPID()))
+				{
+					flow.SetState(FlowState::CLOSED);
+					flow.SetCloseReason(CloseReason::PROCESS_EXITED);
+					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::CLOSED });
+					continue;
+				}
+
+				// Active -> Idle transition
 				if (flow.GetState() == FlowState::ACTIVE && flow.IsIdle(context.now))
 				{
 					flow.SetState(FlowState::IDLE);
 					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::IDLE });
+					continue;
 				}
-				else if (flow.GetState() == FlowState::CLOSED && flow.CanArchive(context.now))
+
+				// IDLE Flows timeout
+				if (flow.GetState() == FlowState::IDLE)
 				{
-					flow.SetState(FlowState::ARCHIVED);
-					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::ARCHIVED });
+					bool shouldClose = false;
+
+					if (flow.GetKey().protocol == Protocol::UDP)
+					{
+						shouldClose = flow.CanEvict(context.now);
+					}
+					else if (flow.GetKey().protocol == Protocol::TCP)
+					{
+						shouldClose = flow.HasTcpIdleTimeout(context.now);
+					}
+
+					if (shouldClose)
+					{
+						flow.SetState(FlowState::CLOSED);
+						flow.SetCloseReason(CloseReason::IDLE_TIMEOUT);
+						context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::CLOSED });
+					}
 				}
+
 			}
 		}
 	}
 
-	void FlowTable::CleanUpArchivedFlows()
+	void FlowTable::CleanUpClosedFlows(Steady_TimePoint now)
 	{
 		std::lock_guard lock(m_mutex);
 
 		for (auto it = m_flows.begin(); it != m_flows.end(); )
 		{
-			if (it->second.GetState() == FlowState::ARCHIVED)
+			if (it->second.CanEvict(now))
 			{
 				it = m_flows.erase(it);
 			}

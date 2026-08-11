@@ -10,8 +10,7 @@ namespace netscope::flow
 		UPDATED,
         IDLE,
         RESUMED,
-        CLOSED,
-        ARCHIVED
+        CLOSED
 	};
 
 	struct FlowResult

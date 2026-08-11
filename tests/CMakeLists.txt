@@ -1,8 +1,7 @@
 add_executable(NetScopeTests
-    flow/FlowTests.cpp
-    flow/FlowTableTests.cpp
-    coordinator/CoordinatorTests.cpp
- "flow/FlowManagerTests.cpp")
+    "tests.cpp"
+    "SQLiteDatabaseTest.cpp"
+)
 
 target_link_libraries(NetScopeTests
     PRIVATE

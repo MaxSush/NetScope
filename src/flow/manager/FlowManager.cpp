@@ -26,7 +26,7 @@ namespace netscope::flow
 			context.flow = m_Table.GetOrDefault(key, event);
 			break;
 		[[unlikely]]  case NetworkEventType::CONNECTIONCLOSED:
-			context.flow = m_Table.CloseFlow(key, context.input.closeReason.value_or(CloseReason::UNKNOWN));
+			context.flow = m_Table.CloseFlow(key, context.input.close);
 			break;
 		default:
 			throw std::runtime_error("Unsupported NetworkEventType");
@@ -38,9 +38,9 @@ namespace netscope::flow
 		m_Table.UpdateFlowLifeCycle(context);
 	}
 
-	void FlowManager::CleanUpArchived()
+	void FlowManager::CleanUpExpired(Steady_TimePoint now)
 	{
-		m_Table.CleanUpArchivedFlows();
+		m_Table.CleanUpClosedFlows(now);
 	}
 
 	std::vector<FlowSnapshot> FlowManager::GetSnapshot() const

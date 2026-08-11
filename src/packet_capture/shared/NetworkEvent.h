@@ -4,10 +4,16 @@
 #include <model/IPAddress.h>
 #include <model/Protocol.h> 
 #include <optional>
-#include "NetworkEventType.h"
+#include "FlowTerminationInfo.h"
 
 namespace netscope
 {
+	enum class NetworkEventType : uint8_t
+	{
+		PACKET,
+		CONNECTIONCLOSED
+	};
+
 	struct NetworkEvent
 	{
 		pid_t pid{};
@@ -15,7 +21,7 @@ namespace netscope
 		uint64_t bytes;
 
 		NetworkEventType type;
-		std::optional<CloseReason> closeReason = std::nullopt;
+		FlowTerminationInfo close;
 
 		flow::Protocol protocol;
 		Direction direction;

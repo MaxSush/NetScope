@@ -6,8 +6,7 @@ namespace netscope::flow
 	{
 		ACTIVE,
 		IDLE,
-		CLOSED,
-		ARCHIVED
+		CLOSED
 	};
 
 	inline constexpr const char* ToFlowStateString(FlowState state)
@@ -20,8 +19,6 @@ namespace netscope::flow
 			return "IDLE";
 		case FlowState::CLOSED:
 			return "CLOSED";
-		case FlowState::ARCHIVED:
-			return "ARCHIVED";
 		default:
 			return "UNKNOWN";
 		}

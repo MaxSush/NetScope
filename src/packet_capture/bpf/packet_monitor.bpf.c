@@ -10,14 +10,14 @@
 
 #include "bpf_network_event.h"
 
-#define PACKET	0
+#define PACKET				0
 #define CONNECTION_CLOSE	1
 
-#define DIRECTION_IN   0
-#define DIRECTION_OUT  1
+#define DIRECTION_IN		0
+#define DIRECTION_OUT		1
 
-#define AF_INET		2
-#define AF_INET6	10
+#define AF_INET				2
+#define AF_INET6			10
 
 struct
 {
@@ -155,12 +155,16 @@ int BPF_PROG(trace_set_state, struct sock* sk, int state)
 
 	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
 	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
-	// TODO: Add close reason
-	event->data.close.closeReason = 0;
+
+	int err = BPF_CORE_READ(sk, sk_err);
+	__u8 shutdown = BPF_CORE_READ(sk, sk_shutdown);
+
+	event->data.close.err = err;
+	event->data.close.shutdown_mask = shutdown;
+
+	bpf_printk("flow: %d:%d => %d:%d state=%d err=%d mask=%d", event->source.ipv4, event->source_port, event->destination.ipv4, event->destination_port, state, err, shutdown);
 
 	bpf_ringbuf_submit(event, 0);
-
-
 	return 0;
 }
 

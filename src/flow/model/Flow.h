@@ -13,15 +13,6 @@
 
 namespace netscope::flow
 {
-	/*
-		Flow
-		│
-		├── Identity
-		├── Statistics
-		├── Ownership
-		└── Lifetime
-	*/
-	
 	class Flow
 	{
 	public:
@@ -30,6 +21,8 @@ namespace netscope::flow
 		void Update(const NetworkEvent& event);
 
 		pid_t GetPID() const;
+		const FlowKey& GetKey() const;
+
 		bool IsIdle(Steady_TimePoint timeout) const;
 		Duration GetIdleTime() const;
 		Duration GetFlowLifetime() const;
@@ -37,11 +30,15 @@ namespace netscope::flow
 		FlowSnapshot GetSnapshot() const;
 
 		inline FlowState GetState() const { return m_state; }
-		inline void SetState(FlowState state) { m_state = state; }
-		void SetCloseReason(CloseReason reason) { m_closeReason = reason; }
-		std::optional<CloseReason> GetCloseReason() const { return m_closeReason; }
+		void SetState(FlowState state);
 
-		bool CanArchive(Steady_TimePoint now) const;
+		void SetCloseReason(CloseReason reason);
+		
+		inline void SetCloseInfo(FlowTerminationInfo reason) { m_closeInfo = reason; }
+		inline std::optional<FlowTerminationInfo> GetCloseReason() const { return m_closeInfo; }
+
+		bool CanEvict(Steady_TimePoint now) const;
+		bool HasTcpIdleTimeout(Steady_TimePoint now) const;
 	private:
 		FlowKey m_key;
 
@@ -55,6 +52,6 @@ namespace netscope::flow
 		System_TimePoint m_lastSeen;
 
 		FlowState m_state = FlowState::ACTIVE;
-		std::optional<CloseReason> m_closeReason;
+		FlowTerminationInfo m_closeInfo;
 	};
 }

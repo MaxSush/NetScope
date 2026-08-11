@@ -2,6 +2,7 @@
 
 #include "ProcessInfo.h"
 #include <pipeline/IContextProcessor.h>
+#include <lifecycle/ILifecycleProcessor.h>
 
 #include <optional>
 #include <unordered_map>
@@ -18,12 +19,17 @@ namespace netscope::process
 		std::chrono::steady_clock::time_point lastAccess;
 	};
 
-	class ProcessManager : public processing::IContextProcessor
+	class ProcessManager :	public processing::IContextProcessor,
+							public processing::ILifecycleProcessor
 	{
 	public:
 		ProcessManager() = default;
 
 		void Process(processing::ProcessingContext& context) override;
+
+		// Inherited via ILifecycleProcessor
+		void Process(processing::LifecycleContext& context) override;
+		void CleanUpExpired(Steady_TimePoint now) override;
 
 		std::vector<ProcessInfo> GetProcesses() const;
 		std::optional<ProcessResult> Resolve(uint32_t pid);

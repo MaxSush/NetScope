@@ -14,7 +14,7 @@ namespace netscope::flow
 		void Process(processing::ProcessingContext& context) override;
 		void Process(processing::LifecycleContext& context) override;
 
-		void CleanUpArchived() override;
+		void CleanUpExpired(Steady_TimePoint now) override;
 
 		std::vector<FlowSnapshot> GetSnapshot() const;
 

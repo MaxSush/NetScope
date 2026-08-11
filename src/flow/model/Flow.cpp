@@ -1,5 +1,4 @@
 #include "Flow.h"
-#include "Flow.h"
 
 #include <Config.h>
 
@@ -13,6 +12,8 @@ namespace netscope::flow
 		m_lastActivity = Steady_Clock::now();
 		m_firstSeen = System_Clock::now();
 		m_lastSeen = System_Clock::now();
+
+		m_closeInfo.closeReason = CloseReason::NOT_CLOSED;
 	}
 
 	void Flow::Update(const NetworkEvent& event)
@@ -35,6 +36,11 @@ namespace netscope::flow
 	pid_t Flow::GetPID() const
 	{
 		return m_pid;
+	}
+
+	const FlowKey& Flow::GetKey() const
+	{
+		return m_key;
 	}
 
 	bool Flow::IsIdle(Steady_TimePoint now) const
@@ -63,14 +69,33 @@ namespace netscope::flow
 		snapshot.IdleTime = GetIdleTime();
 
 		snapshot.state = m_state;
-		snapshot.closeReason = m_closeReason.value_or(CloseReason::NOT_CLOSED);
+		snapshot.closeReason = m_closeInfo.closeReason.value_or(CloseReason::NOT_CLOSED);
 
 		return snapshot;
 	}
 
-	bool Flow::CanArchive(Steady_TimePoint now) const
+	void Flow::SetState(FlowState state)
 	{
-		return now - m_lastActivity >= config::FLOW_ARCHIVE_TIMEOUT;
+		m_state = state;
+		if (state == FlowState::CLOSED)
+		{
+			m_lastActivity = Steady_Clock::now();
+		}
+	}
+
+	void Flow::SetCloseReason(CloseReason reason)
+	{
+		m_closeInfo.closeReason = reason;
+	}
+
+	bool Flow::CanEvict(Steady_TimePoint now) const
+	{
+		return m_state == FlowState::CLOSED && (now - m_lastActivity) >= config::FLOW_EVICTION_TIMEOUT;
+	}
+
+	bool Flow::HasTcpIdleTimeout(Steady_TimePoint now) const
+	{
+		return now - m_lastActivity >= config::FLOW_TCP_IDLE_HARD_TIMEOUT;
 	}
 
 }

@@ -4,7 +4,7 @@
 #include "FlowKey.h"
 #include "FlowStatistics.h"
 #include "model/FlowState.h"
-#include <shared/NetworkEventType.h>
+#include <shared/FlowTerminationInfo.h>
 #include <time/TimeUtils.h>
 
 namespace netscope::flow

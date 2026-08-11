@@ -26,7 +26,7 @@ namespace netscope::processing
 
 		for (auto processor : m_processors)
 		{
-			processor.get().CleanUpArchived();
+			processor.get().CleanUpExpired(context.now);
 		}
 	}
 }

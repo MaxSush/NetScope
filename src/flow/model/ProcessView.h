@@ -3,7 +3,6 @@
 #include <string>
 #include <cstdint>
 #include <model/FlowStatistics.h>
-#include <shared/NetworkEventType.h>
 
 namespace netscope::flow
 {

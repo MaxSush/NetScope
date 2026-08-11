@@ -15,11 +15,11 @@ namespace netscope
 		m_persistenceService(m_database),
 		m_lifecycleScheduler(m_coordinator)
 	{
-		m_pipeline.AddStage(m_flowManager);
 		m_pipeline.AddStage(m_processManager);
+		m_pipeline.AddStage(m_flowManager);
 
+		m_lifecycleScheduler.AddProcessor(m_processManager);
 		m_lifecycleScheduler.AddProcessor(m_flowManager);
-		//m_lifecycleScheduler.AddProcessor(m_processManager);
 
 		m_coordinator.Subscribe(m_persistenceService);
 	}

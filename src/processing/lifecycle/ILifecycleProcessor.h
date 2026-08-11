@@ -1,4 +1,5 @@
 #pragma once
+#include <time/TimeUtils.h>
 
 namespace netscope::processing
 {
@@ -11,6 +12,6 @@ namespace netscope::processing
 
 		virtual void Process(LifecycleContext& context) = 0;
 
-		virtual void CleanUpArchived() = 0;
+		virtual void CleanUpExpired(Steady_TimePoint now) = 0;
 	};
 }

@@ -4,7 +4,6 @@
 
 namespace netscope::flow
 {
-	enum class FlowChange;
 	class FlowResult;
 }
 
@@ -18,6 +17,8 @@ namespace netscope::processing
 		LifecycleContext& operator=(const LifecycleContext&) = delete;
 
 		Steady_TimePoint now;
+
+		std::vector<uint32_t> exitedPids;
 
 		std::vector<flow::FlowResult> flowChanges;
 	};

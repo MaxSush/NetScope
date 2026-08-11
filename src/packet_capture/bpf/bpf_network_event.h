@@ -21,7 +21,9 @@ struct bpf_network_event
 
         struct
         {
-			__u8 closeReason;
+			__u8 close_reason;
+            __u8 shutdown_mask;
+            __s32 err;
         } close;
     } data;
 
