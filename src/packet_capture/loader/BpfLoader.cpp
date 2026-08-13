@@ -141,6 +141,28 @@ namespace netscope
 			return false;
 		}
 
+		bpf_program* udp_send_program = bpf_object__find_program_by_name(object, "trace_udp_send");
+		if (!udp_send_program)
+		{
+			return false;
+		}
+		udpSendLink = bpf_program__attach(udp_send_program);
+		if (!udpSendLink)
+		{
+			return false;
+		}
+
+		bpf_program* udp_recv_program = bpf_object__find_program_by_name(object, "trace_udp_recv");
+		if (!udp_recv_program)
+		{
+			return false;
+		}
+		udpRecvLink = bpf_program__attach(udp_recv_program);
+		if (!udpRecvLink)
+		{
+			return false;
+		}
+
 		tracked_map = bpf_object__find_map_by_name(object, "tracked_pids");
 
 
@@ -180,6 +202,18 @@ namespace netscope
 		{
 			bpf_link__destroy(processExitLink);
 			processExitLink = nullptr;
+		}
+
+		if (udpSendLink)
+		{
+			bpf_link__destroy(udpSendLink);
+			udpSendLink = nullptr;
+		}
+
+		if (udpRecvLink)
+		{
+			bpf_link__destroy(udpRecvLink);
+			udpRecvLink = nullptr;
 		}
 
 		if (object)

@@ -233,8 +233,6 @@ namespace netscope::storage
 
 	DatabaseResult netscope::storage::PersistenceService::Persist(const processing::ProcessClosedEvent& event)
 	{
-		LOG_INFO("==========================================>Process EndTime Trigered <========================================================");
-
 		return m_processRepository.Upsert(event.processInfo);
 	}
 }

@@ -1,4 +1,5 @@
 #include "Flow.h"
+#include "Flow.h"
 
 #include <Config.h>
 
@@ -91,6 +92,11 @@ namespace netscope::flow
 	bool Flow::HasTcpIdleTimeout(Steady_TimePoint now) const
 	{
 		return now - m_lastActivity >= config::FLOW_TCP_IDLE_HARD_TIMEOUT;
+	}
+
+	bool Flow::HasUdpIdleTimeout(Steady_TimePoint now) const
+	{
+		return (now - m_lastActivity) >= config::FLOW_UDP_IDLE_CLOSE_TIMEOUT;
 	}
 
 }

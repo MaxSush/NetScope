@@ -50,12 +50,12 @@ static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u
 	event->tid = tid;
 
 	event->type = PACKET;
-	event->protocol = IPPROTO_TCP;
+	event->protocol = protocol;
 	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
 
 
 	event->data.packet.bytes = bytes;
-	event->data.packet.direction = DIRECTION_OUT;
+	event->data.packet.direction = direction;
 
 	if (event->family == AF_INET)
 	{
@@ -90,6 +90,24 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 	}
 
 	return emit_packet_event(sk, IPPROTO_TCP, (__u64)ret, DIRECTION_IN);
+}
+
+SEC("fentry/udp_sendmsg")
+int BPF_PROG(trace_udp_send, struct sock* sk, struct msghdr* msg, size_t size)
+{
+	//bpf_printk("UDP packet captured DIRECTION_OUT %d", IPPROTO_UDP);
+	return emit_packet_event(sk, IPPROTO_UDP, size, DIRECTION_OUT);
+}
+
+SEC("fexit/udp_recvmsg")
+int BPF_PROG(trace_udp_recv, struct sock* sk, struct msghdr* msg, size_t len, int flags, int* addr_len, int ret)
+{
+	if (ret <= 0)
+	{
+		return 0;
+	}
+	//bpf_printk("UDP packet captured DIRECTION_IN %d", IPPROTO_UDP);
+	return emit_packet_event(sk, IPPROTO_UDP, (__u64)ret, DIRECTION_IN);
 }
 
 SEC("fentry/tcp_set_state")
@@ -130,8 +148,6 @@ int BPF_PROG(trace_set_state, struct sock* sk, int state)
 
 	event->data.close.err = err;
 	event->data.close.shutdown_mask = shutdown;
-
-	bpf_printk("flow: %d:%d => %d:%d state=%d err=%d mask=%d", event->source.ipv4, event->source_port, event->destination.ipv4, event->destination_port, state, err, shutdown);
 
 	bpf_ringbuf_submit(event, 0);
 	return 0;

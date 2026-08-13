@@ -25,9 +25,13 @@ namespace netscope
 	private:
 		bpf_object* object = nullptr;
 		ring_buffer* ringBuffer = nullptr;
+
 		bpf_link* sendLink = nullptr;
 		bpf_link* recvLink = nullptr;
 		bpf_link* stateLink = nullptr;
+
+		bpf_link* udpSendLink = nullptr;
+		bpf_link* udpRecvLink = nullptr;
 
 		bpf_map* tracked_map = nullptr;
 		bpf_link* processExitLink = nullptr;

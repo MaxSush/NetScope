@@ -38,6 +38,7 @@ namespace netscope::flow
 
 		bool CanEvict(Steady_TimePoint now) const;
 		bool HasTcpIdleTimeout(Steady_TimePoint now) const;
+		bool HasUdpIdleTimeout(Steady_TimePoint now) const;
 	private:
 		FlowKey m_key;
 

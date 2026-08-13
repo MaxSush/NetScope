@@ -1,5 +1,5 @@
 #include "FlowTable.h"
-#include "FlowTable.h"
+
 #include <utility>
 #include <mutex>
 #include <context/LifecycleContext.h>
@@ -44,7 +44,7 @@ namespace netscope::flow
 		}
 		auto result = m_flows.emplace(key, Flow(key, event.pid));
 		result.first->second.Update(event);
-		return { std::ref(result.first->second), FlowChange::CREATED};
+		return { std::ref(result.first->second), FlowChange::CREATED };
 	}
 
 	std::optional<FlowResult> FlowTable::CloseFlows(const FlowKey& key, FlowTerminationInfo info)
@@ -153,7 +153,7 @@ namespace netscope::flow
 
 					if (flow.GetKey().protocol == Protocol::UDP)
 					{
-						shouldClose = flow.CanEvict(context.now);
+						shouldClose = flow.HasUdpIdleTimeout(context.now);
 					}
 					else if (flow.GetKey().protocol == Protocol::TCP)
 					{
@@ -167,7 +167,6 @@ namespace netscope::flow
 						context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::CLOSED });
 					}
 				}
-
 			}
 		}
 	}
