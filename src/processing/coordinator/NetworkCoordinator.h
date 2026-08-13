@@ -4,6 +4,7 @@
 #include <activity/FlowUpdatedEvent.h>
 #include <activity/FlowCreatedEvent.h>
 #include <activity/FlowClosedEvent.h>
+#include <activity/ProcessClosedEvent.h>
 #include <lifecycle/ILifecycleProcessor.h>
 
 namespace netscope::processing
@@ -45,7 +46,7 @@ namespace netscope::processing
 		core::DomainEventBus<FlowUpdatedEvent> m_flowUpdatedBus;
 		core::DomainEventBus<FlowCreatedEvent> m_flowCreatedBus;
 		core::DomainEventBus<FlowClosedEvent> m_flowClosedBus;
-
+		core::DomainEventBus<ProcessClosedEvent> m_processClosedBus;
 	};
 
 	template<typename TSub>
@@ -54,6 +55,7 @@ namespace netscope::processing
 		SubscribeIfSupported<FlowCreatedEvent>(subscriber, m_flowCreatedBus);
 		SubscribeIfSupported<FlowUpdatedEvent>(subscriber, m_flowUpdatedBus);
 		SubscribeIfSupported<FlowClosedEvent>(subscriber, m_flowClosedBus);
+		SubscribeIfSupported<ProcessClosedEvent>(subscriber, m_processClosedBus);
 
 	}
 
@@ -63,6 +65,7 @@ namespace netscope::processing
 		UnsubscribeIfSupported<FlowCreatedEvent>(subscriber, m_flowCreatedBus);
 		UnsubscribeIfSupported<FlowUpdatedEvent>(subscriber, m_flowUpdatedBus);
 		UnsubscribeIfSupported<FlowClosedEvent>(subscriber, m_flowClosedBus);
+		UnsubscribeIfSupported<ProcessClosedEvent>(subscriber, m_processClosedBus);
 
 	}
 

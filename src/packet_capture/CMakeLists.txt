@@ -5,7 +5,7 @@ add_subdirectory("bpf")
 
 add_library(NetScopePacketCapture STATIC
     "loader/BpfLoader.cpp"
- "runtime/CaptureRuntime.h" "runtime/CaptureRuntime.cpp" "shared/CloseReason.h" "shared/FlowTerminationInfo.h")
+ "runtime/CaptureRuntime.h" "runtime/CaptureRuntime.cpp" "shared/CloseReason.h" "shared/FlowTerminationInfo.h" "runtime/IBpfTracker.h")
 
 target_include_directories(NetScopePacketCapture 
     PUBLIC

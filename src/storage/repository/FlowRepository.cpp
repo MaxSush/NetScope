@@ -13,7 +13,7 @@ namespace netscope::storage
 		constexpr auto UpsertSql = R"sql(
             INSERT INTO Flows
             (
-                process_id,
+                pid,
                 protocol,
                 local_address,
                 local_port,
@@ -34,7 +34,7 @@ namespace netscope::storage
             )
             ON CONFLICT
             (
-                process_id,
+                pid,
                 protocol,
                 local_address,
                 local_port,

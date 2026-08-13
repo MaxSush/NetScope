@@ -1,6 +1,4 @@
 #include "PersistenceService.h"
-#include "PersistenceService.h"
-#include "PersistenceService.h"
 
 #include <unordered_map>
 #include <FlowHash.h>
@@ -144,6 +142,14 @@ namespace netscope::storage
 							}
 						}
 					}
+					else if constexpr (std::is_same_v<T, processing::ProcessClosedEvent>)
+					{
+						optimized.push_back(event);
+					}
+					else
+					{
+						LOG_ERROR("Event Dropped");
+					}
 				},
 				event
 			);
@@ -169,10 +175,9 @@ namespace netscope::storage
 
 		for (const auto& event : m_batchBuffer)
 		{
-			std::visit([this](const auto& e)
+			std::visit([this, &res](const auto& e)
 				{
-					//LOG_INFO("Persistence Event");
-					Persist(e);
+					res = Persist(e);
 				},
 				event
 			);
@@ -201,6 +206,11 @@ namespace netscope::storage
 		m_queue.Push(event);
 	}
 
+	void PersistenceService::HandleEvent(const processing::ProcessClosedEvent& event)
+	{
+		m_queue.Push(event);
+	}
+
 	DatabaseResult PersistenceService::Persist(const processing::FlowCreatedEvent& event)
 	{
 		auto res = m_processRepository.Upsert(event.process);
@@ -218,8 +228,13 @@ namespace netscope::storage
 
 	DatabaseResult PersistenceService::Persist(const processing::FlowClosedEvent& event)
 	{
-		// TODO: Handle process cleanup if needed
-		LOG_INFO("Flow state: %s", flow::ToFlowStateString(event.flowSnapshot.state));
 		return m_flowRepository.Upsert(event.flowSnapshot);
+	}
+
+	DatabaseResult netscope::storage::PersistenceService::Persist(const processing::ProcessClosedEvent& event)
+	{
+		LOG_INFO("==========================================>Process EndTime Trigered <========================================================");
+
+		return m_processRepository.Upsert(event.processInfo);
 	}
 }

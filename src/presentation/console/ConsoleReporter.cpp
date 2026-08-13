@@ -16,11 +16,12 @@ namespace netscope::presentation
 		std::cout << "\033[2J\033[1;1H";
 
 		fmt::print(
-			"{:<8} {:<20} {:>8} {:>8} {:>15} {:>15}\n",
+			"{:<8} {:<20} {:>8} {:>8} {:>8} {:>15} {:>15}\n",
 			"PID",
 			"PROCESS",
 			"ACTIVE",
 			"IDLE",
+			"CLOSED",
 			"UPLOAD",
 			"DOWNLOAD");
 		std::cout << "------------------------------------------------------------------------------------------------------" << std::endl;
@@ -31,11 +32,12 @@ namespace netscope::presentation
 		for (const auto& process : processes)
 		{
 			fmt::print(
-				"{:<8} {:<20} {:>8} {:>8} {:>15} {:>15}\n",
+				"{:<8} {:<20} {:>8} {:>8} {:>8} {:>15} {:>15}\n",
 				process.pid,
 				process.processName,
 				process.activeConnections,
 				process.idleConnections,
+				process.closeConnections,
 				ByteFormatter::Format(process.statistics.uploadBytes),
 				ByteFormatter::Format(process.statistics.downloadBytes)
 			);

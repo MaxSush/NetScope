@@ -4,7 +4,11 @@
 
 namespace netscope::flow
 {
-	class FlowResult;
+	struct FlowResult;
+}
+namespace netscope::process
+{
+	struct ProcessResult;
 }
 
 namespace netscope::processing
@@ -18,7 +22,7 @@ namespace netscope::processing
 
 		Steady_TimePoint now;
 
-		std::vector<uint32_t> exitedPids;
+		std::vector<process::ProcessResult> exitedProcess;
 
 		std::vector<flow::FlowResult> flowChanges;
 	};

@@ -8,6 +8,7 @@
 #include <activity/FlowUpdatedEvent.h>
 #include <activity/FlowCreatedEvent.h>
 #include <activity/FlowClosedEvent.h>
+#include <activity/ProcessClosedEvent.h>
 
 #include <thread>
 #include <atomic>
@@ -18,13 +19,15 @@ namespace netscope::storage
 	using PersistenceEvent = std::variant<
 		processing::FlowCreatedEvent,
 		processing::FlowUpdatedEvent,
-		processing::FlowClosedEvent
+		processing::FlowClosedEvent,
+		processing::ProcessClosedEvent
 	>;
 
 	class PersistenceService : 
 		public core::IEventSubscriber<processing::FlowCreatedEvent>,
 		public core::IEventSubscriber<processing::FlowUpdatedEvent>,
-		public core::IEventSubscriber<processing::FlowClosedEvent>
+		public core::IEventSubscriber<processing::FlowClosedEvent>,
+		public core::IEventSubscriber<processing::ProcessClosedEvent>
 	{
 	public:
 		explicit PersistenceService(IDatabase& database);
@@ -69,9 +72,11 @@ namespace netscope::storage
 		void HandleEvent(const processing::FlowCreatedEvent& event) override;
 		void HandleEvent(const processing::FlowUpdatedEvent& event) override;
 		void HandleEvent(const processing::FlowClosedEvent& event) override;
+		void HandleEvent(const processing::ProcessClosedEvent& event) override;
 
 		DatabaseResult Persist(const processing::FlowCreatedEvent& event);
 		DatabaseResult Persist(const processing::FlowUpdatedEvent& event);
 		DatabaseResult Persist(const processing::FlowClosedEvent& event);
+		DatabaseResult Persist(const processing::ProcessClosedEvent& event);
 	};
 }

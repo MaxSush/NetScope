@@ -1,8 +1,10 @@
 #include "FlowTable.h"
+#include "FlowTable.h"
 #include <utility>
 #include <mutex>
 #include <context/LifecycleContext.h>
 #include <unordered_set>
+#include <ProcessResult.h>
 
 namespace netscope::flow
 {
@@ -45,7 +47,7 @@ namespace netscope::flow
 		return { std::ref(result.first->second), FlowChange::CREATED};
 	}
 
-	std::optional<FlowResult> FlowTable::CloseFlow(const FlowKey& key, FlowTerminationInfo info)
+	std::optional<FlowResult> FlowTable::CloseFlows(const FlowKey& key, FlowTerminationInfo info)
 	{
 		std::lock_guard lock(m_mutex);
 
@@ -64,6 +66,24 @@ namespace netscope::flow
 		it->second.SetCloseInfo(info);
 		
 		return FlowResult{ std::ref(it->second), FlowChange::CLOSED };
+	}
+
+	std::vector<FlowResult> FlowTable::CloseFlowsByPid(const uint32_t pid, CloseReason reason)
+	{
+		std::vector<FlowResult> results;
+		std::lock_guard lock(m_mutex);
+
+		for (auto& [key, flow] : m_flows)
+		{
+			if (flow.GetPID() == pid && flow.GetState() != FlowState::CLOSED)
+			{
+				flow.SetState(FlowState::CLOSED);
+				flow.SetCloseReason(reason);
+				results.emplace_back(FlowResult{ std::ref(flow), FlowChange::CLOSED });
+			}
+		}
+
+		return results;
 	}
 
 	void FlowTable::Remove(const FlowKey& key)
@@ -96,7 +116,11 @@ namespace netscope::flow
 		{
 			std::lock_guard lock(m_mutex);
 
-			std::unordered_set<uint32_t> exitedSet(context.exitedPids.begin(), context.exitedPids.end());
+			std::unordered_set<uint32_t> exitedSet;
+			for (const auto& proc : context.exitedProcess)
+			{
+				exitedSet.insert(proc.GetProcess().pid);
+			}
 
 			for (auto& [key, flow] : m_flows)
 			{

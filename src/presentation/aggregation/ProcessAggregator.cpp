@@ -31,8 +31,14 @@ namespace netscope
 					process.processName = "[Terminated]";
 				}
 			}
+			
 			process.statistics += flow.statistics;
-			if (flow.IsIdle(config::FLOW_IDLE_TIMEOUT))
+
+			if (flow.state == flow::FlowState::CLOSED)
+			{
+				++process.closeConnections;
+			}
+			else if (flow.IsIdle(config::FLOW_IDLE_TIMEOUT))
 			{
 				++process.idleConnections;
 			}
@@ -56,28 +62,3 @@ namespace netscope
 		return result;
 	}
 }
-
-/*
-for every FlowView
-↓
-Find ProcessView
-↓
-If missing
-	create one
-↓
-statistics += flow.statistics
-↓
-connection count++
-↓
-if flow.IsIdle()
-	idle++
-else
-	active++
-
-Finally
-unordered_map
-↓
-vector<ProcessView>
-↓
-return
-*/

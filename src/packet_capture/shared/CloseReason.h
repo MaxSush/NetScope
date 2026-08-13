@@ -39,7 +39,7 @@ namespace netscope
 		case CloseReason::IDLE_TIMEOUT:
 			return "IDLE_TIMEOUT";
 		case CloseReason::KERNEL_ERROR:
-			return "KERNE_ERROR";
+			return "KERNEL_ERROR";
 		case CloseReason::CAPTURE_STOPPED:
 			return "CAPTURE_STOPPED";
 		case CloseReason::UNKNOWN:

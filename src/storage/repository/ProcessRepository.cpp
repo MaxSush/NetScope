@@ -48,7 +48,14 @@ namespace netscope::storage
 		if(!result)
 			return result;
 
-		result = statement->BindNull(3);
+		if (process.end_time.has_value())
+		{
+			result = statement->Bind(3, process.end_time.value());
+		}
+		else
+		{
+			result = statement->BindNull(3);
+		}
 		if(!result)
 			return result;
 
@@ -113,7 +120,10 @@ namespace netscope::storage
 		process::ProcessInfo process{};
 		process.pid = statement->GetInt32(0);
 		process.start_time = statement->GetInt64(1);
-		// TODO: end_time
+		if (!statement->IsNull(2))
+		{
+			process.end_time = statement->GetInt64(2);
+		}
 		process.name = statement->GetText(3);
 		process.exe_path = statement->GetText(4);
 

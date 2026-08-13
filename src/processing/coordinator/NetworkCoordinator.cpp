@@ -2,7 +2,7 @@
 
 #include <context/LifecycleContext.h>
 #include <storage/FlowResult.h>
-#include <iostream>
+#include <logger/Logger.h>
 
 
 namespace netscope::processing
@@ -13,6 +13,7 @@ namespace netscope::processing
 
 	void NetworkCoordinator::Coordinate(const ProcessingContext& context)
 	{
+		// Single-flow result (PACKET, CONNECTION_CLOSED)
         if (context.flow.has_value())
         {
             switch (context.flow->change)
@@ -41,6 +42,18 @@ namespace netscope::processing
 				break;
             }
         }
+
+		// Multi-flow result (PROCESS_EXITED)
+		for (const auto& closedFlow : context.closedFlows)
+		{
+			m_flowClosedBus.Publish({ closedFlow.GetSnapshot() });
+		}
+
+		// Process exit event
+		if (context.process.has_value() && context.process->IsExited())
+		{
+			m_processClosedBus.Publish({ context.process->GetProcess() });
+		}
 	}
 
     void NetworkCoordinator::Coordinate(const LifecycleContext& context)
@@ -58,6 +71,10 @@ namespace netscope::processing
 			default:
                 break;
             }
+		}
+		for (const auto& processResult : context.exitedProcess)
+		{
+			m_processClosedBus.Publish({ processResult.process });
 		}
     }
 

@@ -22,7 +22,8 @@ namespace netscope::flow
 		Flow* Find(const FlowKey& key);
 		FlowResult GetOrDefault(const FlowKey& key, const NetworkEvent& event);
 
-		std::optional<FlowResult> CloseFlow(const FlowKey& key, FlowTerminationInfo info);
+		std::optional<FlowResult> CloseFlows(const FlowKey& key, FlowTerminationInfo info);
+		std::vector<FlowResult> CloseFlowsByPid(const uint32_t pid, CloseReason reason);
 
 		void Remove(const FlowKey& key);
 		void Clear();

@@ -53,11 +53,6 @@ namespace netscope::flow
 		return Steady_Clock::now() - m_lastActivity;
 	}
 
-	Duration Flow::GetFlowLifetime() const
-	{
-		 return Steady_Clock::now() - m_lastActivity;
-	}
-
 	FlowSnapshot Flow::GetSnapshot() const
 	{
 		FlowSnapshot snapshot;

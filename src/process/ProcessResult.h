@@ -6,9 +6,9 @@ namespace netscope::process
 {
 	enum class ProcessChange
 	{
-		Existing,
-		Started,
-		Exited
+		EXISTING,
+		STARTED,
+		EXITED
 	};
 
 	struct ProcessResult
@@ -23,17 +23,17 @@ namespace netscope::process
 
 		bool IsStarted() const
 		{
-			return change == ProcessChange::Started;
+			return change == ProcessChange::STARTED;
 		}
 
 		bool IsExisting() const
 		{
-			return change == ProcessChange::Existing;
+			return change == ProcessChange::EXISTING;
 		}
 
 		bool IsExited() const
 		{
-			return change == ProcessChange::Existing;
+			return change == ProcessChange::EXITED;
 		}
 	};
 }

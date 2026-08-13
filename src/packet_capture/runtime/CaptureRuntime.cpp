@@ -21,4 +21,14 @@ namespace netscope
 	{
 		m_loader.Unload();
 	}
+
+	void netscope::CaptureRuntime::TrackPid(uint32_t pid) const
+	{
+		m_loader.TrackPid(pid);
+	}
+
+	void netscope::CaptureRuntime::UntrackPid(uint32_t pid) const
+	{
+		m_loader.UntrackPid(pid);
+	}
 }

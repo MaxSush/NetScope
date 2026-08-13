@@ -9,27 +9,31 @@ namespace netscope::flow
 	{
 		const NetworkEvent& event = context.input;
 
-		Endpoint source{
-			event.sourceAddress,
-			event.sourcePort
-		};
-
-		Endpoint destination{
-			event.destinationAddress,
-			event.destinationPort
-		};
-
-		FlowKey key = FlowKey::Create(source, destination, event.protocol);
 		switch (context.input.type)
 		{
 		[[likely]] case NetworkEventType::PACKET:
+		{
+			Endpoint source{ event.sourceAddress, event.sourcePort };
+			Endpoint destination{ event.destinationAddress, event.destinationPort };
+			FlowKey key = FlowKey::Create(source, destination, event.protocol);
+
 			context.flow = m_Table.GetOrDefault(key, event);
 			break;
-		[[unlikely]]  case NetworkEventType::CONNECTIONCLOSED:
-			context.flow = m_Table.CloseFlow(key, context.input.close);
+		}
+		[[unlikely]]  case NetworkEventType::CONNECTION_CLOSED:
+		{
+			Endpoint source{ event.sourceAddress, event.sourcePort };
+			Endpoint destination{ event.destinationAddress, event.destinationPort };
+			FlowKey key = FlowKey::Create(source, destination, event.protocol);
+
+			context.flow = m_Table.CloseFlows(key, context.input.close);
 			break;
-		default:
-			throw std::runtime_error("Unsupported NetworkEventType");
+		}
+		[[unlikely]] case NetworkEventType::PROCESS_EXITED:
+		{
+			context.closedFlows = m_Table.CloseFlowsByPid(context.input.pid, CloseReason::PROCESS_EXITED);
+			break;
+		}
 		}
 	}
 

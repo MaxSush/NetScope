@@ -32,7 +32,7 @@ namespace netscope
 		}
 		else if (packet->type == 1)  // Connection closed
 		{
-			event.type = NetworkEventType::CONNECTIONCLOSED;
+			event.type = NetworkEventType::CONNECTION_CLOSED;
 
 			int err = packet->data.close.err;
 			int shutdown_mask = packet->data.close.shutdownMask;
@@ -63,6 +63,11 @@ namespace netscope
 			{
 				event.close.closeReason = CloseReason::UNKNOWN;
 			}
+		}
+		else if (packet->type == 2) //Process Exit
+		{
+			event.type = NetworkEventType::PROCESS_EXITED;
+			event.close.closeReason = CloseReason::PROCESS_EXITED;
 		}
 
 		if (event.family == flow::AddressFamily::IPv4)
@@ -125,6 +130,20 @@ namespace netscope
 			return false;
 		}
 
+		bpf_program* process_exit_program = bpf_object__find_program_by_name(object, "trace_process_exit");
+		if (!process_exit_program)
+		{
+			return false;
+		}
+		processExitLink = bpf_program__attach(process_exit_program);
+		if (!processExitLink)
+		{
+			return false;
+		}
+
+		tracked_map = bpf_object__find_map_by_name(object, "tracked_pids");
+
+
 		bpf_map* map = bpf_object__find_map_by_name(object, "events");
 		ringBuffer = ring_buffer__new(bpf_map__fd(map), HandleEvent, &queue, nullptr);
 
@@ -157,6 +176,12 @@ namespace netscope
 			stateLink = nullptr;
 		}
 
+		if (processExitLink)
+		{
+			bpf_link__destroy(processExitLink);
+			processExitLink = nullptr;
+		}
+
 		if (object)
 		{
 			bpf_object__close(object);
@@ -168,4 +193,16 @@ namespace netscope
 	{
 		ring_buffer__poll(ringBuffer, 100);
 	}
+
+	void netscope::BPFLoader::TrackPid(uint32_t pid) const
+	{
+		uint8_t val = 1;
+		bpf_map__update_elem(tracked_map, &pid, sizeof(pid), &val, sizeof(val), BPF_ANY);
+	}
+
+	void netscope::BPFLoader::UntrackPid(uint32_t pid) const
+	{
+		bpf_map__delete_elem(tracked_map, &pid, sizeof(pid), BPF_ANY);
+	}
+
 }

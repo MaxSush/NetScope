@@ -1,6 +1,4 @@
 #include "Statement.h"
-#include "Statement.h"
-#include "Statement.h"
 
 #include <sqlite3.h>
 

@@ -15,5 +15,6 @@ namespace netscope::flow
 
 		size_t activeConnections = 0;
 		size_t idleConnections = 0;
+		size_t closeConnections = 0;
 	};
 }

@@ -11,7 +11,8 @@ namespace netscope
 	enum class NetworkEventType : uint8_t
 	{
 		PACKET,
-		CONNECTIONCLOSED
+		CONNECTION_CLOSED,
+		PROCESS_EXITED
 	};
 
 	struct NetworkEvent

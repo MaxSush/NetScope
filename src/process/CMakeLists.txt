@@ -1,7 +1,7 @@
 add_library(NetScopeProcess STATIC
     "ProcessManager.cpp"
     "SocketResolver.cpp"
-    "ConnectionTable.cpp" 
+     
   "ProcessResult.h")
 
  target_include_directories(NetScopeProcess

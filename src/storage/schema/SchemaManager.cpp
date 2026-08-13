@@ -50,7 +50,7 @@ namespace netscope::storage
 			CREATE TABLE IF NOT EXISTS Flows(
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-				process_id INTEGER NOT NULL,
+				pid INTEGER NOT NULL,
 
 				protocol INTEGER NOT NULL,
 
@@ -78,10 +78,10 @@ namespace netscope::storage
 
 				close_reason TEXT NOT NULL,
 
-				FOREIGN KEY(process_id)
-					REFERENCES Processes(process_id)
+				FOREIGN KEY(pid)
+					REFERENCES Processes(pid)
 				UNIQUE(
-					process_id,
+					pid,
 					protocol,
 					local_address,
 					local_port,
@@ -107,7 +107,7 @@ namespace netscope::storage
 			ON Processes(pid);
 
 			CREATE INDEX IF NOT EXISTS idx_flow_process
-			ON Flows(process_id);
+			ON Flows(pid);
 
 			CREATE INDEX IF NOT EXISTS idx_flow_last_seen
 			ON Flows(last_seen);

@@ -17,7 +17,11 @@ namespace netscope::processing
 		ProcessingContext& operator=(const ProcessingContext&) = delete;
 
 		const NetworkEvent& input;
+
 		std::optional<flow::FlowResult> flow;
+		
+		std::vector<flow::FlowResult> closedFlows;
+
 		std::optional<process::ProcessResult> process;
 	};
 }

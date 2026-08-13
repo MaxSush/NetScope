@@ -1,8 +1,4 @@
 #include "ProcessManager.h"
-#include "ProcessManager.h"
-#include "ProcessManager.h"
-#include "ProcessManager.h"
-#include "ProcessManager.h"
 
 #include <filesystem>
 #include <fstream>
@@ -10,26 +6,70 @@
 #include <mutex>
 #include <utility>
 
+#include <context/LifecycleContext.h>
+
 namespace fs = std::filesystem;
 
 namespace netscope::process
 {
+	ProcessManager::ProcessManager(IBpfTracker& tracker)
+		: m_tracker(tracker)
+	{
+	}
+
 	void ProcessManager::Process(processing::ProcessingContext& context)
 	{
-		if (context.input.type != NetworkEventType::PACKET)
+		switch (context.input.type)
 		{
-			return;
+		case NetworkEventType::PACKET:
+			context.process = Resolve(context.input.pid);
+			break;
+		case NetworkEventType::PROCESS_EXITED:
+			MarkTerminated(context.input.pid, context);
+			break;
+		default:
+			break;
 		}
-		context.process = Resolve(context.input.pid).value();
 	}
 
 	void ProcessManager::Process(processing::LifecycleContext& context)
 	{
-		// TODO: Process Exited logic
+		std::lock_guard lock(m_mutex);
+
+		for (auto& [pid, cached] : m_cache)
+		{
+			if (cached.state == ProcessState::TERMINATED)
+			{
+				continue;
+			}
+
+			auto process = ReadProcess(pid);
+
+			if (!process || process->start_time != cached.process.start_time)
+			{
+				cached.state = ProcessState::TERMINATED;
+				cached.lastAccess = context.now;
+				cached.process.end_time = ToUnixMilliseconds(System_Clock::now());
+
+				context.exitedProcess.push_back(ProcessResult{ std::ref(cached.process), ProcessChange::EXITED });
+			}
+		}
 	}
 
 	void ProcessManager::CleanUpExpired(Steady_TimePoint now)
 	{
+		std::lock_guard lock(m_mutex);
+		for (auto it = m_cache.begin(); it != m_cache.end();)
+		{
+			if (it->second.state == ProcessState::TERMINATED && it->second.CanEvict(now))
+			{
+				it = m_cache.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
 	}
 
 	std::vector<ProcessInfo> ProcessManager::GetProcesses() const
@@ -53,7 +93,7 @@ namespace netscope::process
 			auto proc = ReadProcess(pid);
 			if (proc)
 			{
-				processes.push_back(ReadProcess(pid).value());
+				processes.push_back(*proc);
 			}
 		}
 
@@ -69,7 +109,7 @@ namespace netscope::process
 		if (it != m_cache.end())
 		{
 			it->second.lastAccess = now;
-			return ProcessResult { std::ref(it->second.process), ProcessChange::Existing };
+			return ProcessResult { std::ref(it->second.process), ProcessChange::EXISTING };
 		}
 
 		auto process = ReadProcess(pid);
@@ -82,36 +122,13 @@ namespace netscope::process
 			CachedProcess
 			{
 				*process,
+				ProcessState::RUNNING,
 				now
 			}
 		);
+		m_tracker.TrackPid(pid);
 
-		return ProcessResult{ std::ref(res.first->second.process), ProcessChange::Started };
-	}
-
-	void ProcessManager::CleanUp(std::chrono::seconds maxAge)
-	{
-		auto now = std::chrono::steady_clock::now();
-
-		std::lock_guard lock(m_mutex);
-
-		for (auto it = m_cache.begin(); it != m_cache.end();)
-		{
-			auto process = ReadProcess(it->second.process.pid);
-			// PID Re-use check
-			if (!process || it->second.process.start_time != process->start_time)
-			{
-				it = m_cache.erase(it);
-				continue;
-			}
-
-			if (now - it->second.lastAccess > maxAge)
-			{
-				it = m_cache.erase(it);
-				continue;
-			}
-			++it;
-		}
+		return ProcessResult{ std::ref(res.first->second.process), ProcessChange::STARTED };
 	}
 
 	bool ProcessManager::IsPidDirectory(const std::string& name) const
@@ -171,5 +188,28 @@ namespace netscope::process
 
 		return info;
 	}
+
+	void netscope::process::ProcessManager::MarkTerminated(uint32_t pid, processing::ProcessingContext& context)
+	{
+		std::lock_guard lock(m_mutex);
+
+		auto it = m_cache.find(pid);
+		if (it == m_cache.end())
+		{
+			return;
+		}
+
+		if (it->second.state == ProcessState::TERMINATED)
+		{
+			return;
+		}
+
+		it->second.state = ProcessState::TERMINATED;
+		it->second.lastAccess = Steady_Clock::now();
+		it->second.process.end_time = ToUnixMilliseconds(System_Clock::now());
+
+		context.process = ProcessResult{ std::ref(it->second.process), ProcessChange::EXITED };
+	}
+
 }
 

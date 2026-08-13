@@ -10,6 +10,7 @@ namespace netscope
 		m_capture(m_queue),
 		m_dispatcher(m_queue, m_pipeline),
 		m_pipeline(m_coordinator),
+		m_processManager(m_capture),
 		m_processAggregator(m_processManager),
 		m_consoleReporter(m_processAggregator, m_flowManager),
 		m_persistenceService(m_database),
@@ -50,7 +51,7 @@ namespace netscope
 			{
 				while (m_running)
 				{
-					LOG_TRACE("LifecycleScheduler tick");
+					LOG_TRACE("Dispatcher tick");
 
 					m_dispatcher.Run();
 				}
@@ -123,7 +124,13 @@ namespace netscope
 			m_reportThread.join();
 		}
 
+		if (m_lifecycleThread.joinable())
+		{
+			m_lifecycleThread.join();
+		}
+
 	}
+
 	bool netscope::NetscopeApplication::InitializeDatabase()
 	{
 		auto res = m_database.Open("netscope.db");

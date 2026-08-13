@@ -25,7 +25,6 @@ namespace netscope::flow
 
 		bool IsIdle(Steady_TimePoint timeout) const;
 		Duration GetIdleTime() const;
-		Duration GetFlowLifetime() const;
 
 		FlowSnapshot GetSnapshot() const;
 

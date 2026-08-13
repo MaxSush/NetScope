@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <model/ProcessView.h>
+#include "ProcessView.h"
 #include <model/FlowSnapshot.h>
 #include <ProcessManager.h>
 
