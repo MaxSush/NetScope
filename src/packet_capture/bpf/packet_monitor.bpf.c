@@ -62,9 +62,12 @@ static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u
 		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
 		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
 	}
-	else
+	else if(event->family == AF_INET6)
 	{
-		/* TODO: IPv6 */
+		struct in6_addr saddr = BPF_CORE_READ(sk, __sk_common.skc_v6_rcv_saddr);
+		struct in6_addr daddr = BPF_CORE_READ(sk, __sk_common.skc_v6_daddr);
+		__builtin_memcpy(event->source.ipv6, &saddr, 16);
+		__builtin_memcpy(event->destination.ipv6, &daddr, 16);
 	}
 
 	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
@@ -137,7 +140,10 @@ int BPF_PROG(trace_set_state, struct sock* sk, int state)
 	}
 	else
 	{
-		/* TODO: IPv6 */
+		struct in6_addr saddr = BPF_CORE_READ(sk, __sk_common.skc_v6_rcv_saddr);
+		struct in6_addr daddr = BPF_CORE_READ(sk, __sk_common.skc_v6_daddr);
+		__builtin_memcpy(event->source.ipv6, &saddr, 16);
+		__builtin_memcpy(event->destination.ipv6, &daddr, 16);
 	}
 
 	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);

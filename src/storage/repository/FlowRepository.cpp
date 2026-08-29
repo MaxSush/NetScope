@@ -66,7 +66,7 @@ namespace netscope::storage
         if (!result)
             return result;
         
-        result = statement->Bind(3, flowSnapshot.key.source.ToString());
+        result = statement->Bind(3, flowSnapshot.key.source.address.ToString());
         if (!result)
             return result;
 
@@ -74,7 +74,7 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        result = statement->Bind(5, flowSnapshot.key.destination.ToString());
+        result = statement->Bind(5, flowSnapshot.key.destination.address.ToString());
         if (!result)
             return result;
 

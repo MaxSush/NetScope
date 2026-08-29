@@ -42,7 +42,7 @@ namespace netscope::flow
 		case Protocol::UDP:
 			return "UDP";
 		case Protocol::ICMPv6:
-			return "ICPMv6";
+			return "ICMPv6";
 		default:
 			return "UNKNOWN";
 		}

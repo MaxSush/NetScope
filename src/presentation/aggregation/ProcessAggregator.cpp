@@ -56,7 +56,7 @@ namespace netscope
 		}
 
 		std::sort(result.begin(), result.end(), [](const flow::ProcessView& a, const flow::ProcessView& b) {
-			return (a.statistics.downloadBytes + a.statistics.uploadBytes) < (b.statistics.downloadBytes + b.statistics.uploadBytes);
+			return a.pid < b.pid;
 			});
 
 		return result;

@@ -27,6 +27,7 @@ namespace netscope::presentation
 		std::cout << "------------------------------------------------------------------------------------------------------" << std::endl;
 
 		auto flows = m_flowManager.GetSnapshot();
+
 		std::vector<flow::ProcessView> processes = m_processAggregator.Aggregate(flows);
 
 		for (const auto& process : processes)

@@ -18,6 +18,10 @@ namespace netscope::flow
 
 	std::string Endpoint::ToString() const
 	{
+		if (address.IsIPv6())
+		{
+			return "[" + address.ToString() + "]" + std::to_string(port);
+		}
 		return address.ToString() + ":" + std::to_string(port);
 	}
 }

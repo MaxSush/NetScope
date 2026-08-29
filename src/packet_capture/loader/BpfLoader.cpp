@@ -3,6 +3,7 @@
 #include "shared/BpfNetworkEvent.h"
 #include "shared/NetworkEvent.h"
 
+#include <cstring> 
 #include <bpf/libbpf.h>
 
 
@@ -19,7 +20,14 @@ namespace netscope
 		event.tid = packet->tid;
 
 		event.protocol = flow::ToProtocol(packet->protocol);
-		event.family = flow::AddressFamily::IPv4;
+		if (packet->family == 10)
+		{
+			event.family = flow::AddressFamily::IPv6;
+		}
+		else
+		{
+			event.family = flow::AddressFamily::IPv4;
+		}
 
 		event.sourcePort = packet->source_port;
 		event.destinationPort = packet->destination_port;
@@ -77,8 +85,12 @@ namespace netscope
 		}
 		else
 		{
-			//event.sourceAddress = IPAddress::IPv6(packet->source.ipv6);
-			//event.destinationAddress = IPAddress::IPv6(packet->destination.ipv6);
+			std::array<uint8_t, 16> srcAddr, dstAddr;
+			std::memcpy(srcAddr.data(), packet->source.ipv6, 16);
+			std::memcpy(dstAddr.data(), packet->destination.ipv6, 16);
+
+			event.sourceAddress = flow::IPAddress::IPv6(srcAddr);
+			event.destinationAddress = flow::IPAddress::IPv6(dstAddr);
 		}
 		queue->Push(event);
 
