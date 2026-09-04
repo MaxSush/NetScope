@@ -4,6 +4,8 @@
 #include <FlowHash.h>
 #include <logger/Logger.h>
 
+#include <config/Config.h>
+
 namespace netscope::storage
 {
 	netscope::storage::PersistenceService::PersistenceService(IDatabase& database)
@@ -11,7 +13,7 @@ namespace netscope::storage
 		m_flowRepository(database),
 		m_db(database)
 	{
-		m_batchBuffer.reserve(MAX_BATCH_SIZE);
+		m_batchBuffer.reserve(Config::Get().persistenceBatchSize);
 	}
 
 	void PersistenceService::Run()
@@ -45,9 +47,9 @@ namespace netscope::storage
 
 		m_batchBuffer.push_back(m_queue.Pop());
 
-		auto deadline = std::chrono::steady_clock::now() + MAX_BATCH_DELAY;
+		auto deadline = std::chrono::steady_clock::now() + Config::Get().persistenceBatchDelay;
 
-		while (m_batchBuffer.size() < MAX_BATCH_SIZE)
+		while (m_batchBuffer.size() < Config::Get().persistenceBatchSize)
 		{
 			PersistenceEvent event;
 			if (m_queue.TryPop(event))

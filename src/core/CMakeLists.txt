@@ -4,8 +4,13 @@ add_library(NetScopeCore STATIC
    "threading/Thread.cpp"
    "event/EventBus.cpp"
    "event/EventQueue.h"
- "hash/HashUtils.h" "time/TimeUtils.h" "Config.h" "format/ByteFormatter.cpp" "format/ByteFormatter.h" "utilities/Expected.h"
-  "event/IEventSubscriber.h" "event/DomainEventBus.h")
+   "hash/HashUtils.h" 
+   "time/TimeUtils.h" 
+   "format/ByteFormatter.cpp" "format/ByteFormatter.h" 
+   "utilities/Expected.h"
+   "event/IEventSubscriber.h" "event/DomainEventBus.h"
+   "config/Config.h" "config/ConfigLoader.cpp"
+)
 
 target_include_directories(NetScopeCore
     PUBLIC
@@ -16,6 +21,7 @@ target_link_libraries(NetScopeCore
     PRIVATE
         fmt::fmt
         spdlog::spdlog
+        tomlplusplus::tomlplusplus
 )
 
 target_compile_features(NetScopeCore PUBLIC cxx_std_17)

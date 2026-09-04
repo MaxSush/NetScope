@@ -1,5 +1,5 @@
 #include "ProcessAggregator.h"
-#include <Config.h>
+#include <config/Config.h>
 #include <algorithm>
 
 namespace netscope
@@ -38,7 +38,7 @@ namespace netscope
 			{
 				++process.closeConnections;
 			}
-			else if (flow.IsIdle(config::FLOW_IDLE_TIMEOUT))
+			else if (flow.IsIdle(Config::Get().flowIdleTimeout))
 			{
 				++process.idleConnections;
 			}

@@ -12,6 +12,8 @@
 #include <persistence/PersistenceService.h>
 #include <database/SQLiteDatabase.h>
 
+#include <config/Config.h>
+
 namespace netscope
 {
 	class NetscopeApplication

@@ -5,14 +5,13 @@
 #include <lifecycle/ILifecycleProcessor.h>
 #include <runtime/IBpfTracker.h>
 
+#include <config/Config.h>
+
 #include <optional>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <string>
-
-#include <Config.h>
-
 
 namespace netscope::process
 {
@@ -20,7 +19,8 @@ namespace netscope::process
 	{
 		TERMINATED,
 		RUNNING,
-		UNKNOWN
+		UNKNOWN,
+		IGNORED
 	};
 
 	struct CachedProcess
@@ -31,7 +31,7 @@ namespace netscope::process
 
 		bool CanEvict(Steady_TimePoint now) const
 		{
-			return (now - lastAccess) >= config::PROCESS_EVICTION_TIMEOUT;
+			return (now - lastAccess) >= Config::Get().processEvictionTimeout;
 		}
 	};
 

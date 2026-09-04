@@ -23,6 +23,11 @@ namespace netscope::process
 		{
 		case NetworkEventType::PACKET:
 			context.process = Resolve(context.input.pid);
+			if (context.process && context.process->change == ProcessChange::IGNORED)
+			{
+				context.drop = true;
+				context.process = std::nullopt;
+			}
 			break;
 		case NetworkEventType::PROCESS_EXITED:
 			MarkTerminated(context.input.pid, context);
@@ -38,7 +43,7 @@ namespace netscope::process
 
 		for (auto& [pid, cached] : m_cache)
 		{
-			if (cached.state == ProcessState::TERMINATED)
+			if (cached.state == ProcessState::TERMINATED || cached.state == ProcessState::IGNORED)
 			{
 				continue;
 			}
@@ -61,7 +66,7 @@ namespace netscope::process
 		std::lock_guard lock(m_mutex);
 		for (auto it = m_cache.begin(); it != m_cache.end();)
 		{
-			if (it->second.state == ProcessState::TERMINATED && it->second.CanEvict(now))
+			if ((it->second.state == ProcessState::TERMINATED || it->second.state == ProcessState::IGNORED) && it->second.CanEvict(now))
 			{
 				it = m_cache.erase(it);
 			}
@@ -109,6 +114,10 @@ namespace netscope::process
 		if (it != m_cache.end())
 		{
 			it->second.lastAccess = now;
+			if (it->second.state == ProcessState::IGNORED)
+			{
+				return ProcessResult{ std::ref(it->second.process), ProcessChange::IGNORED };
+			}
 			return ProcessResult { std::ref(it->second.process), ProcessChange::EXISTING };
 		}
 
@@ -116,6 +125,19 @@ namespace netscope::process
 		if (!process)
 		{
 			return std::nullopt;
+		}
+
+		if (Config::Get().ignoredProcesses.count(process->name))
+		{
+			auto res = m_cache.emplace(pid,
+				CachedProcess
+				{
+					*process,
+					ProcessState::IGNORED,
+					now
+				}
+			);
+			return ProcessResult{ std::ref(res.first->second.process), ProcessChange::IGNORED };
 		}
 
 		auto res = m_cache.emplace(pid,

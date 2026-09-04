@@ -6,6 +6,7 @@
 #include <cstring> 
 #include <bpf/libbpf.h>
 
+#include <config/Config.h>
 
 namespace netscope
 {
@@ -99,7 +100,7 @@ namespace netscope
 
 	bool BPFLoader::Load(EventQueue<NetworkEvent>& queue)
 	{
-		object = bpf_object__open_file("packet_monitor.bpf.o", nullptr);
+		object = bpf_object__open_file(Config::Get().bpfObjectPath.c_str(), nullptr);
 		if (!object)
 		{
 			

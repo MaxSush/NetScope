@@ -8,7 +8,8 @@ namespace netscope::process
 	{
 		EXISTING,
 		STARTED,
-		EXITED
+		EXITED,
+		IGNORED
 	};
 
 	struct ProcessResult

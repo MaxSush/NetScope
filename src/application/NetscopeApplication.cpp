@@ -1,6 +1,5 @@
 #include "NetscopeApplication.h"
 #include <logger/Logger.h>
-#include <Config.h>
 #include <schema/SchemaManager.h>
 
 namespace netscope
@@ -61,7 +60,7 @@ namespace netscope
 			{
 				while (m_running)
 				{
-					std::this_thread::sleep_for(config::LIFECYCLE_SCHEDULER_INTERVAL);
+					std::this_thread::sleep_for(Config::Get().lifecycleInterval);
 					
 					if (!m_running)
 					{
@@ -78,7 +77,7 @@ namespace netscope
 			{
 				while (m_running)
 				{
-					std::this_thread::sleep_for(std::chrono::seconds(1));
+					std::this_thread::sleep_for(Config::Get().reportInterval);
 
 					m_consoleReporter.Report();
 				}
@@ -133,7 +132,7 @@ namespace netscope
 
 	bool netscope::NetscopeApplication::InitializeDatabase()
 	{
-		auto res = m_database.Open("netscope.db");
+		auto res = m_database.Open(Config::Get().databasePath);
 		if (!res)
 		{
 			LOG_ERROR(res.message);

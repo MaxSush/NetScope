@@ -22,6 +22,10 @@ namespace netscope::processing
 		for (auto* processor : m_processors)
 		{
 			processor->Process(context);
+			if (context.drop)
+			{
+				return;
+			}
 		}
 
 		m_coordinator.Coordinate(context);

@@ -4,24 +4,33 @@
 #include <thread>
 #include <iostream>
 #include <NetscopeApplication.h>
+#include <config/ConfigLoader.h>
+
 
 using namespace netscope;
 
-int main()
+int main(int argc, char* argv[])
 {
 	Logger::Initialize();
-	Timer timer;
 
-	LOG_INFO("NetScope started.");
+	std::optional<std::string> configPath;
+	for (int i = 0; i < argc; ++i)
+	{
+		std::string arg = argv[i];
+		if (arg == "--config" && i + 1 < argc)
+		{
+			configPath = argv[++i];
+		}
+	}
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(750));
-	
-	LOG_DEBUG("time elapsed seconds: {:.2f}", timer.ElapsedSeconds());
-	LOG_DEBUG("time elapsed milliseconds: {:.2f}", timer.ElapsedMilliSeconds());
+	Config::Initialize(ConfigLoader::Load(configPath));
 
-	fmt::print("Welcome to NetScope\n");
+	const auto& config = Config::Get();
 
-	// Test
+	LOG_INFO("Netscope started.");
+	LOG_INFO("Database: {}", config.databasePath);
+	LOG_INFO("BPF Object: {}", config.bpfObjectPath);
+	LOG_INFO("Ignored processes: {}", config.ignoredProcesses.size());
 
 	NetscopeApplication app;
 

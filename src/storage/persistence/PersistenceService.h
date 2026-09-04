@@ -51,10 +51,6 @@ namespace netscope::storage
 			FlowBatchState state;
 		};
 
-
-		static constexpr size_t MAX_BATCH_SIZE = 1000;
-		static constexpr Milliseconds MAX_BATCH_DELAY{ 1000 };
-
 		IDatabase& m_db;
 
 		EventQueue<PersistenceEvent> m_queue;

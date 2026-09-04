@@ -23,5 +23,7 @@ namespace netscope::processing
 		std::vector<flow::FlowResult> closedFlows;
 
 		std::optional<process::ProcessResult> process;
+
+		bool drop = false;
 	};
 }

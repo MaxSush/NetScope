@@ -1,7 +1,6 @@
 #include "Flow.h"
-#include "Flow.h"
 
-#include <Config.h>
+#include <config/Config.h>
 
 namespace netscope::flow
 {
@@ -46,7 +45,7 @@ namespace netscope::flow
 
 	bool Flow::IsIdle(Steady_TimePoint now) const
 	{
-		return (now - m_lastActivity) >= config::FLOW_IDLE_TIMEOUT;
+		return (now - m_lastActivity) >= Config::Get().flowIdleTimeout;
 	}
 
 	Duration Flow::GetIdleTime() const
@@ -86,17 +85,17 @@ namespace netscope::flow
 
 	bool Flow::CanEvict(Steady_TimePoint now) const
 	{
-		return m_state == FlowState::CLOSED && (now - m_lastActivity) >= config::FLOW_EVICTION_TIMEOUT;
+		return m_state == FlowState::CLOSED && (now - m_lastActivity) >= Config::Get().flowEvictionTimeout;
 	}
 
 	bool Flow::HasTcpIdleTimeout(Steady_TimePoint now) const
 	{
-		return now - m_lastActivity >= config::FLOW_TCP_IDLE_HARD_TIMEOUT;
+		return now - m_lastActivity >= Config::Get().flowTcpIdleHardTimeout;
 	}
 
 	bool Flow::HasUdpIdleTimeout(Steady_TimePoint now) const
 	{
-		return (now - m_lastActivity) >= config::FLOW_UDP_IDLE_CLOSE_TIMEOUT;
+		return (now - m_lastActivity) >= Config::Get().flowUdpIdleCloseTimeout;
 	}
 
 }
