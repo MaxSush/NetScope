@@ -31,6 +31,11 @@ namespace netscope
 			return false;
 		}
 
+		storage::AppStateRepository appState(m_database);
+		appState.Set("daemon_pid", std::to_string(getpid()));
+		appState.Set("schema_version", "1");
+		appState.Set("started_at", std::to_string(ToUnixMilliseconds(System_Clock::now())));
+
 		if (!m_capture.Initialize())
 		{
 			LOG_ERROR("Error starting Capture Runtime");
@@ -91,6 +96,29 @@ namespace netscope
 				}
 			});
 
+		m_retentionThread = std::thread([this]() 
+			{
+				// break sleep into 1-second chunks for fast shutdown by checking m_running
+				for (int i = 0; i < 60 && m_running; ++i)
+				{
+					std::this_thread::sleep_for(Seconds(1));
+				}
+
+				while (m_running)
+				{
+					m_persistenceService.RunRetention();
+
+					// same pattern
+					auto interval = Config::Get().retentionCheckInterval;
+					auto elapsed = Seconds(0);
+					while (elapsed < interval && m_running)
+					{
+						std::this_thread::sleep_for(Seconds(1));
+						elapsed += Seconds(1);
+					}
+				}
+			});
+
 		return true;
 	}
 
@@ -128,6 +156,10 @@ namespace netscope
 			m_lifecycleThread.join();
 		}
 
+		if (m_retentionThread.joinable())
+		{
+			m_retentionThread.join();
+		}
 	}
 
 	bool netscope::NetscopeApplication::InitializeDatabase()

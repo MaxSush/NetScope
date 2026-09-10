@@ -13,7 +13,7 @@ namespace netscope::storage
 	DatabaseResult ProcessRepository::Upsert(const process::ProcessInfo& process)
 	{
 		constexpr auto UpsertSql = R"sql(
-			INSERT INTO Processes
+			INSERT INTO processes
 			(
 				pid,
 				start_time,
@@ -83,7 +83,7 @@ namespace netscope::storage
 				end_time,
 				name,
 				exe_path
-			FROM Processes
+			FROM processes
 			WHERE pid = ?
 			AND start_time = ?;
 		)sql";
@@ -128,6 +128,50 @@ namespace netscope::storage
 		process.exe_path = statement->GetText(4);
 
 		return process;
+	}
+
+	Expected<int64_t, DatabaseResult> ProcessRepository::GetProcessId(uint32_t pid, uint64_t startTime)
+	{
+		constexpr auto Sql = R"sql(
+			SELECT process_id FROM processes
+			WHERE pid = ? AND start_time = ?;
+		)sql";
+
+		std::unique_ptr<Statement> statement;
+		auto result = m_db.Prepare(Sql, statement);
+		if (!result)
+		{
+			return result;
+		}
+
+		result = statement->Bind(1, pid);
+		if (!result)
+		{
+			return result;
+		}
+
+		result = statement->Bind(2, startTime);
+		if (!result)
+		{
+			return result;
+		}
+
+		auto step = statement->Execute();
+		if (step == StepResult::ROW)
+		{
+			return static_cast<int64_t>(statement->GetInt64(0));
+		}
+		else if (step == StepResult::DONE)
+		{
+			return DatabaseResult::Failure(
+				DatabaseStatus::NOT_FOUND, DatabaseError::NONE,
+				fmt::format("Process not found: pid{}, start_time = {}", pid, startTime)
+			);
+		}
+		return DatabaseResult::Failure(
+			DatabaseStatus::FAILED, DatabaseError::STEP_FAILED,
+			"Failed to get process_id"
+		);
 	}
 
 }

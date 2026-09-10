@@ -13,6 +13,6 @@ namespace netscope::storage
 	private:
 		DatabaseResult CreateTables(IDatabase& db);
 		DatabaseResult CreateIndexes(IDatabase& db);
-
+		DatabaseResult SetSchemaVersion(IDatabase& db);
 	};
 }

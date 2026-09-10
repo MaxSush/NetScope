@@ -6,7 +6,11 @@ add_library(NetScopeStorage STATIC
   "database/SQLiteDatabase.h" "database/DatabaseResult.h" "schema/SchemaManager.h" "schema/SchemaManager.cpp"
   "database/Statement.h" "database/Statement.cpp"  
   "repository/ProcessRepository.h" "repository/IProcessRepository.h" "repository/ProcessRepository.cpp" 
-  "repository/IFlowRepository.h" "repository/FlowRepository.cpp" "repository/FlowRepository.h" "persistence/PersistenceService.h" "persistence/PersistenceService.cpp")
+  "repository/IFlowRepository.h" "repository/FlowRepository.cpp" "repository/FlowRepository.h" 
+  "persistence/PersistenceService.h" "persistence/PersistenceService.cpp" 
+  "repository/AppStateRepository.h" "repository/AppStateRepository.cpp"
+  "repository/BandwidthRepository.cpp" "repository/BandwidthRepository.h"
+)
 
 target_include_directories(NetScopeStorage
     PUBLIC

@@ -2,7 +2,11 @@
 #include <database/IDatabase.h>
 #include <repository/ProcessRepository.h>
 #include <repository/FlowRepository.h>
+#include <repository/BandwidthRepository.h>
+#include <repository/AppStateRepository.h>
 #include <event/EventQueue.h>
+
+#include <FlowHash.h>
 
 #include <event/IEventSubscriber.h>
 #include <activity/FlowUpdatedEvent.h>
@@ -12,6 +16,7 @@
 
 #include <thread>
 #include <atomic>
+#include <unordered_map>
 
 namespace netscope::storage
 {
@@ -34,8 +39,7 @@ namespace netscope::storage
 
 		void Run();
 		void Stop();
-
-		//DatabaseResult SaveSnapshot(const Snapshot& snapshot);
+		void RunRetention();
 
 	private:
 		enum class FlowBatchState
@@ -57,9 +61,20 @@ namespace netscope::storage
 
 		ProcessRepository m_processRepository;
 		FlowRepository m_flowRepository;
-		//SnapshotRepository m_snapshotRepository;
+
+		BandwidthRepository m_bandwidthRepository;
+		AppStateRepository m_appStateRepository;
+
+		std::unordered_map<flow::FlowKey, flow::FlowStatistics> m_lastPersistedStats;
 
 		std::vector<PersistenceEvent> m_batchBuffer;
+		std::unordered_map<uint32_t, int64_t> m_processIdCache;
+
+	private:
+		void AccumulateBandwidth(int64_t processId, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta);
+
+		int64_t ResolveProcessId(const process::ProcessInfo& process);
+		int64_t ResolveProcessId(uint32_t pid);
 
 		void BuildBatch();
 		void Optimize();

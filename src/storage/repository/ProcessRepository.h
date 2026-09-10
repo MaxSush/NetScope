@@ -15,6 +15,8 @@ namespace netscope::storage
 
 		Expected<process::ProcessInfo, DatabaseResult> Find(uint32_t pid, uint64_t startTime) override;
 
+		Expected<int64_t, DatabaseResult> GetProcessId(uint32_t pid, uint64_t startTime) override;
+
 	private:
 		IDatabase& m_db;
 	};

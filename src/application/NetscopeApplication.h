@@ -4,15 +4,13 @@
 #include <coordinator/NetworkCoordinator.h>
 #include <manager/FlowManager.h>
 #include <runtime/CaptureRuntime.h>
-#include <ProcessManager.h>
+#include <ProcessManager.h> 
 #include <console/ConsoleReporter.h>
 
 #include <lifecycle/LifecycleScheduler.h>
 
 #include <persistence/PersistenceService.h>
 #include <database/SQLiteDatabase.h>
-
-#include <config/Config.h>
 
 namespace netscope
 {
@@ -50,6 +48,7 @@ namespace netscope
 		std::thread m_dispatcherThread;
 		std::thread m_reportThread;
 		std::thread m_lifecycleThread;
+		std::thread m_retentionThread;
 
 		std::atomic<bool> m_running = false;
 	};

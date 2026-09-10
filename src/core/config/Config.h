@@ -39,7 +39,12 @@ namespace netscope
 		// PERSISTENCE
 		size_t persistenceBatchSize = 1000;
 		Milliseconds persistenceBatchDelay{ 1000 };
+
+		// RETENTION
 		uint32_t retentionHours = 0;
+		uint32_t hourlyRetentionDays = 7;
+		uint32_t dailyRetentionDays = 365;
+		Seconds retentionCheckInterval{ 3600 };
 
 		// LIFECYCLE SCHEDULER
 		Seconds lifecycleInterval{ 5 };

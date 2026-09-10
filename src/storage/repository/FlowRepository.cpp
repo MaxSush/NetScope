@@ -8,12 +8,12 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot)
+	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot, int64_t processId)
 	{
 		constexpr auto UpsertSql = R"sql(
-            INSERT INTO Flows
+            INSERT INTO flows
             (
-                pid,
+                process_id,
                 protocol,
                 local_address,
                 local_port,
@@ -34,7 +34,7 @@ namespace netscope::storage
             )
             ON CONFLICT
             (
-                pid,
+                process_id,
                 protocol,
                 local_address,
                 local_port,
@@ -58,7 +58,7 @@ namespace netscope::storage
             return result;
         }
 
-        result = statement->Bind(1, static_cast<uint32_t>(flowSnapshot.pid));
+        result = statement->Bind(1, static_cast<int64_t>(processId));
         if (!result)
             return result;
 

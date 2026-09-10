@@ -1,7 +1,6 @@
 #include "PersistenceService.h"
 
 #include <unordered_map>
-#include <FlowHash.h>
 #include <logger/Logger.h>
 
 #include <config/Config.h>
@@ -11,6 +10,8 @@ namespace netscope::storage
 	netscope::storage::PersistenceService::PersistenceService(IDatabase& database)
 		: m_processRepository(database),
 		m_flowRepository(database),
+		m_bandwidthRepository(database),
+		m_appStateRepository(database),
 		m_db(database)
 	{
 		m_batchBuffer.reserve(Config::Get().persistenceBatchSize);
@@ -40,7 +41,119 @@ namespace netscope::storage
 	{
 		m_queue.Shutdown();
 	}
+
+	void PersistenceService::RunRetention()
+	{
+		const auto& config = Config::Get();
+		auto now = ToUnixMilliseconds(System_Clock::now());
+
+		auto res = m_db.BeginTransaction();
+		if (!res)
+		{
+			LOG_ERROR("Retention transaction failed : {}", res.message);
+			return;
+		}
+
+		// 1. Purge old closed flows
+		if (config.retentionHours > 0)
+		{
+			int64_t flowCutoff = now - (static_cast<int64_t>(config.retentionHours) * 3600000);
+
+			constexpr auto PurgeFlowSql = R"sql(
+				DELETE FROM flows WHERE state = 'CLOSED' AND last_seen < ?;
+			)sql";
+			
+			std::unique_ptr<Statement> statement;
+			res = m_db.Prepare(PurgeFlowSql, statement);
+			if (res)
+			{
+				statement->Bind(1, flowCutoff);
+				statement->Execute();
+			}
+		}
+
+		// 2. Roll up yesterday's hourly data into daily
+		int64_t todayStart = (now / 86400000) * 86400000;
+		int64_t yesterdayStart = todayStart - 86400000;
+		m_bandwidthRepository.RollUpDaily(yesterdayStart);
+
+		// 3. Purge Bandwidth data
+		int64_t hourlyCutoff = now - (static_cast<int64_t>(config.hourlyRetentionDays) * 86400000);
+		m_bandwidthRepository.PurgeHourlyBefore(hourlyCutoff);
+
+		int64_t dailyCutoff = now - (static_cast<int64_t>(config.dailyRetentionDays) * 86400000);
+		m_bandwidthRepository.PurgeDailyBefore(dailyCutoff);
+
+		// 4. Purge orphaned processes
+		constexpr auto PurgeOrphanSql = R"sql(
+			DELETE FROM processes
+			WHERE process_id NOT IN (SELECT DISTINCT process_id FROM flows)
+			  AND end_time IS NOT NULL;
+		)sql";
+		m_db.Execute(PurgeOrphanSql);
+
+		res = m_db.Commit();
+		if (!res)
+		{
+			LOG_ERROR("Retention commit failed: {}", res.message);
+			m_db.Rollback();
+		}
+		else
+		{
+			LOG_INFO("Retention policy executed successfully");
+		}
+	}
 	
+	void PersistenceService::AccumulateBandwidth(int64_t processId, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta)
+	{
+		if (delta.uploadBytes == 0 && delta.downloadBytes == 0)
+		{
+			return;
+		}
+
+		auto now = ToUnixMilliseconds(snapshot.lastSeen);
+		int64_t hourStart = (now / 3600000) * 3600000;
+
+		auto res = m_bandwidthRepository.AccumulateHourly(processId, hourStart, 
+			delta.uploadBytes, delta.downloadBytes, 1);
+
+		if (!res)
+		{
+			LOG_WARN("Failed to accumulate bandwidth: {}", res.message);
+		}
+	}
+
+	int64_t PersistenceService::ResolveProcessId(const process::ProcessInfo& process)
+	{
+		auto it = m_processIdCache.find(process.pid);
+		if (it != m_processIdCache.end())
+		{
+			return it->second;
+		}
+		auto result = m_processRepository.GetProcessId(process.pid, process.start_time);
+		if (result.HasValue())
+		{
+			m_processIdCache[process.pid] = result.Value();
+			return result.Value();
+		}
+		
+		LOG_ERROR("Failed to resolve process_id for pid={}", process.pid);
+		return -1;
+	}
+
+	int64_t PersistenceService::ResolveProcessId(uint32_t pid)
+	{
+		auto it = m_processIdCache.find(pid);
+		if (it != m_processIdCache.end())
+		{
+			return it->second;
+		}
+
+		// Flow update without a cached process_id means we missed the FlowCreated.
+		LOG_WARN("process_id cache miss for pid={}", pid);
+		return -1;
+	}
+
 	void PersistenceService::BuildBatch()
 	{
 		m_batchBuffer.clear();
@@ -220,21 +333,118 @@ namespace netscope::storage
 		{
 			return res;
 		}
-		return m_flowRepository.Upsert(event.flowSnapshot);
+
+		int64_t processId = ResolveProcessId(event.process);
+		if (processId == -1)
+		{
+			return DatabaseResult::Failure(
+				DatabaseStatus::FAILED, DatabaseError::UNKNOWN,
+				"Failed to resolve process_id"
+			);
+		}
+		res =  m_flowRepository.Upsert(event.flowSnapshot, processId);
+		if (!res)
+		{
+			return res;
+		}
+
+		const auto& stats = event.flowSnapshot.statistics;
+		AccumulateBandwidth(processId, event.flowSnapshot, stats);
+
+		m_lastPersistedStats[event.flowSnapshot.key] = stats;
+
+		return DatabaseResult::Ok();
+
 	}
 
 	DatabaseResult PersistenceService::Persist(const processing::FlowUpdatedEvent& event)
 	{
-		return m_flowRepository.Upsert(event.flowSnapshot);
+		int64_t processId = ResolveProcessId(event.flowSnapshot.pid);
+		if (processId == -1)
+		{
+			return DatabaseResult::Failure(
+				DatabaseStatus::FAILED, DatabaseError::UNKNOWN,
+				"process_id not found in cache for flow update"
+			);
+		}
+		auto res = m_flowRepository.Upsert(event.flowSnapshot, processId);
+		if (!res)
+		{
+			return res;
+		}
+
+		// Compute delta
+		const auto& currentStats = event.flowSnapshot.statistics;
+		flow::FlowStatistics delta{};
+
+		auto it = m_lastPersistedStats.find(event.flowSnapshot.key);
+		if (it != m_lastPersistedStats.end())
+		{
+			const auto& prev = it->second;
+			delta.uploadBytes = currentStats.uploadBytes - prev.uploadBytes;
+			delta.downloadBytes = currentStats.downloadBytes - prev.downloadBytes;
+			delta.uploadPackets = currentStats.uploadPackets - prev.uploadPackets;
+			delta.downloadPackets = currentStats.downloadPackets - prev.downloadPackets;
+		}
+		else
+		{
+			delta = currentStats;
+		}
+
+		AccumulateBandwidth(processId, event.flowSnapshot, delta);
+
+		m_lastPersistedStats[event.flowSnapshot.key] = currentStats;
+
+		return DatabaseResult::Ok();
 	}
 
 	DatabaseResult PersistenceService::Persist(const processing::FlowClosedEvent& event)
 	{
-		return m_flowRepository.Upsert(event.flowSnapshot);
+		int64_t processId = ResolveProcessId(event.flowSnapshot.pid);
+		if (processId == -1)
+		{
+			return DatabaseResult::Failure(
+				DatabaseStatus::FAILED, DatabaseError::UNKNOWN,
+				"process_id not found in cache for flow close"
+			);
+		}
+		auto res =  m_flowRepository.Upsert(event.flowSnapshot, processId);
+		if (!res)
+		{
+			return res;
+		}
+
+		const auto& currentStats = event.flowSnapshot.statistics;
+		flow::FlowStatistics delta{};
+
+		auto it = m_lastPersistedStats.find(event.flowSnapshot.key);
+		if (it != m_lastPersistedStats.end())
+		{
+			const auto& prev = it->second;
+			delta.uploadBytes = currentStats.uploadBytes - prev.uploadBytes;
+			delta.downloadBytes = currentStats.downloadBytes - prev.downloadBytes;
+			delta.uploadPackets = currentStats.uploadPackets - prev.uploadPackets;
+			delta.downloadPackets = currentStats.downloadPackets - prev.downloadPackets;
+		}
+		else
+		{
+			delta = currentStats;
+		}
+
+		AccumulateBandwidth(processId, event.flowSnapshot, delta);
+
+		m_lastPersistedStats.erase(event.flowSnapshot.key);
+
+		return DatabaseResult::Ok();
 	}
 
 	DatabaseResult netscope::storage::PersistenceService::Persist(const processing::ProcessClosedEvent& event)
 	{
-		return m_processRepository.Upsert(event.processInfo);
+		auto res = m_processRepository.Upsert(event.processInfo);
+
+		// evict from cache
+		m_processIdCache.erase(event.processInfo.pid);
+
+		return res;
 	}
 }

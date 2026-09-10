@@ -116,9 +116,19 @@ namespace netscope
 			{
 				config.persistenceBatchDelay = Milliseconds(*v);
 			}
-			if (auto v = tbl["persistence"]["retention_hours"].value<int64_t>())
+
+			// RETENTION
+			if (auto v = tbl["retention"]["retention_hours"].value<int64_t>())
 			{
 				config.retentionHours = static_cast<uint32_t>(*v);
+			}
+			if (auto v = tbl["retention"]["hourly_retention_days"].value<int64_t>())
+			{
+				config.hourlyRetentionDays = static_cast<uint32_t>(*v);
+			}
+			if (auto v = tbl["retention"]["daily_retention_days"].value<int64_t>())
+			{
+				config.dailyRetentionDays = static_cast<uint32_t>(*v);
 			}
 
 			// LIFECYCLE
@@ -132,7 +142,6 @@ namespace netscope
 			{
 				config.reportInterval = Seconds(*v);
 			}
-
 		}
 		catch (toml::parse_error& err)
 		{
