@@ -8,7 +8,7 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot, int64_t processId)
+	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot, int64_t processId, const std::optional<std::string>& hostname)
 	{
 		constexpr auto UpsertSql = R"sql(
             INSERT INTO flows
@@ -19,6 +19,7 @@ namespace netscope::storage
                 local_port,
                 remote_address,
                 remote_port,
+                remote_hostname,
                 upload_bytes,
                 download_bytes,
                 upload_packets,
@@ -30,7 +31,7 @@ namespace netscope::storage
             )
             VALUES
             (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON CONFLICT
             (
@@ -42,6 +43,7 @@ namespace netscope::storage
                 remote_port
             )
             DO UPDATE SET
+                remote_hostname = COALESCE(excluded.remote_hostname, remote_hostname),
                 upload_bytes = excluded.upload_bytes,
                 download_bytes = excluded.download_bytes,
                 upload_packets = excluded.upload_packets,
@@ -82,35 +84,46 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        result = statement->Bind(7, flowSnapshot.statistics.uploadBytes);
+        if (hostname.has_value() && !hostname->empty())
+        {
+            result = statement->Bind(7, *hostname);
+        }
+        else
+        {
+            result = statement->BindNull(7);
+        }
         if (!result)
             return result;
 
-        result = statement->Bind(8, flowSnapshot.statistics.downloadBytes);
+        result = statement->Bind(8, flowSnapshot.statistics.uploadBytes);
         if (!result)
             return result;
 
-        result = statement->Bind(9, flowSnapshot.statistics.uploadPackets);
+        result = statement->Bind(9, flowSnapshot.statistics.downloadBytes);
         if (!result)
             return result;
 
-        result = statement->Bind(10, flowSnapshot.statistics.downloadPackets);
+        result = statement->Bind(10, flowSnapshot.statistics.uploadPackets);
         if (!result)
             return result;
 
-        result = statement->Bind(11, ToUnixMilliseconds(flowSnapshot.firstSeen));
+        result = statement->Bind(11, flowSnapshot.statistics.downloadPackets);
         if (!result)
             return result;
 
-        result = statement->Bind(12, ToUnixMilliseconds(flowSnapshot.lastSeen));
+        result = statement->Bind(12, ToUnixMilliseconds(flowSnapshot.firstSeen));
         if (!result)
             return result;
 
-        result = statement->Bind(13, flow::ToFlowStateString(flowSnapshot.state));
+        result = statement->Bind(13, ToUnixMilliseconds(flowSnapshot.lastSeen));
         if (!result)
             return result;
 
-        result = statement->Bind(14, ToCloseReasonString(flowSnapshot.closeReason));
+        result = statement->Bind(14, flow::ToFlowStateString(flowSnapshot.state));
+        if (!result)
+            return result;
+
+        result = statement->Bind(15, ToCloseReasonString(flowSnapshot.closeReason));
         if (!result)
             return result;
 

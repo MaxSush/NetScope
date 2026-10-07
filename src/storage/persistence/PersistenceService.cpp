@@ -7,12 +7,14 @@
 
 namespace netscope::storage
 {
-	netscope::storage::PersistenceService::PersistenceService(IDatabase& database)
+	netscope::storage::PersistenceService::PersistenceService(IDatabase& database, const hostname::DnsCache& dnsCache, hostname::RdnsResolver& rdnsResolver)
 		: m_processRepository(database),
 		m_flowRepository(database),
 		m_bandwidthRepository(database),
 		m_appStateRepository(database),
-		m_db(database)
+		m_db(database),
+		m_dnsCache(dnsCache),
+		m_rdnsResolver(rdnsResolver)
 	{
 		m_batchBuffer.reserve(Config::Get().persistenceBatchSize);
 	}
@@ -342,7 +344,11 @@ namespace netscope::storage
 				"Failed to resolve process_id"
 			);
 		}
-		res =  m_flowRepository.Upsert(event.flowSnapshot, processId);
+
+		
+		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+
+		res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
 		if (!res)
 		{
 			return res;
@@ -367,7 +373,10 @@ namespace netscope::storage
 				"process_id not found in cache for flow update"
 			);
 		}
-		auto res = m_flowRepository.Upsert(event.flowSnapshot, processId);
+
+		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+
+		auto res = m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
 		if (!res)
 		{
 			return res;
@@ -408,7 +417,10 @@ namespace netscope::storage
 				"process_id not found in cache for flow close"
 			);
 		}
-		auto res =  m_flowRepository.Upsert(event.flowSnapshot, processId);
+
+		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+
+		auto res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
 		if (!res)
 		{
 			return res;
@@ -446,5 +458,22 @@ namespace netscope::storage
 		m_processIdCache.erase(event.processInfo.pid);
 
 		return res;
+	}
+	std::optional<std::string> netscope::storage::PersistenceService::ResolveHostname(const flow::IPAddress& ip)
+	{
+		auto hostname = m_dnsCache.Lookup(ip);
+
+		if (!hostname.has_value())
+		{
+			m_rdnsResolver.Enqueue(ip);
+			return std::nullopt;
+		}
+
+		if (hostname->empty())
+		{
+			return std::nullopt;
+		}
+
+		return hostname;
 	}
 }

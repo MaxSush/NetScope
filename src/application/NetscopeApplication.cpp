@@ -12,7 +12,10 @@ namespace netscope
 		m_processManager(m_capture),
 		m_processAggregator(m_processManager),
 		m_consoleReporter(m_processAggregator, m_flowManager),
-		m_persistenceService(m_database),
+		m_dnsCache(),
+		m_rdnsResolver(m_dnsCache),
+		m_hostnameLoader(m_dnsCache),
+		m_persistenceService(m_database, m_dnsCache, m_rdnsResolver),
 		m_lifecycleScheduler(m_coordinator)
 	{
 		m_pipeline.AddStage(m_processManager);
@@ -41,6 +44,13 @@ namespace netscope
 			LOG_ERROR("Error starting Capture Runtime");
 			return false;
 		}
+
+		m_hostnameAvailable = m_hostnameLoader.Load();
+		if(!m_hostnameAvailable)
+		{
+			LOG_WARN("Hostname capture unavailable — continuing without it");
+		}
+
 		m_running = true;
 
 		m_persistenceServiceThread = std::thread([this]()
@@ -119,12 +129,33 @@ namespace netscope
 				}
 			});
 
+		if (m_hostnameAvailable)
+		{
+			m_hostnameThread = std::thread([this]()
+				{
+					while (m_running)
+					{
+						m_hostnameLoader.Poll();
+					}
+				});
+		}
+
+		m_rdnsThread = std::thread([this]()
+			{
+				while (m_running)
+				{
+					m_rdnsResolver.Run();
+				}
+			});
+
 		return true;
 	}
 
 	void NetscopeApplication::Stop()
 	{
 		m_running = false;
+
+		m_rdnsResolver.Stop();
 
 		m_capture.Stop();
 
@@ -160,6 +191,18 @@ namespace netscope
 		{
 			m_retentionThread.join();
 		}
+
+		if (m_hostnameThread.joinable())
+		{
+			m_hostnameThread.join();
+		}
+
+		if (m_rdnsThread.joinable())
+		{
+			m_rdnsThread.join();
+		}
+
+		m_hostnameLoader.Unload();
 	}
 
 	bool netscope::NetscopeApplication::InitializeDatabase()

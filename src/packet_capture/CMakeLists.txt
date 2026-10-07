@@ -5,7 +5,11 @@ add_subdirectory("bpf")
 
 add_library(NetScopePacketCapture STATIC
     "loader/BpfLoader.cpp"
- "runtime/CaptureRuntime.h" "runtime/CaptureRuntime.cpp" "shared/CloseReason.h" "shared/FlowTerminationInfo.h" "runtime/IBpfTracker.h")
+    "loader/HostnameLoader.cpp"
+    "runtime/CaptureRuntime.h" "runtime/CaptureRuntime.cpp" 
+    "shared/CloseReason.h" "shared/FlowTerminationInfo.h" 
+    "runtime/IBpfTracker.h"
+)
 
 target_include_directories(NetScopePacketCapture 
     PUBLIC
@@ -17,11 +21,12 @@ target_link_libraries(NetScopePacketCapture
     PUBLIC
         NetScopeCore
         NetScopeFlow
+        NetscopeHostname
         ${LIBBPF_LIBRARIES}
 )
 
 add_dependencies(
-    NetScopePacketCapture  PacketMonitorBPF
+    NetScopePacketCapture  NetScopeBPFPrograms
 )
 
 target_compile_features(NetScopePacketCapture PUBLIC cxx_std_17)

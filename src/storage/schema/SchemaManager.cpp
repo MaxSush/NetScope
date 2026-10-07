@@ -109,6 +109,8 @@ namespace netscope::storage
                 local_port       INTEGER NOT NULL,
                 remote_address   TEXT NOT NULL,
                 remote_port      INTEGER NOT NULL,
+				
+				remote_hostname  TEXT,
 
                 upload_bytes     INTEGER NOT NULL DEFAULT 0,
                 download_bytes   INTEGER NOT NULL DEFAULT 0,

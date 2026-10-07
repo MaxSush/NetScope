@@ -5,6 +5,8 @@
 #include <repository/BandwidthRepository.h>
 #include <repository/AppStateRepository.h>
 #include <event/EventQueue.h>
+#include <cache/DnsCache.h>
+#include <resolver/RdnsResolver.h>
 
 #include <FlowHash.h>
 
@@ -35,7 +37,7 @@ namespace netscope::storage
 		public core::IEventSubscriber<processing::ProcessClosedEvent>
 	{
 	public:
-		explicit PersistenceService(IDatabase& database);
+		explicit PersistenceService(IDatabase& database, const hostname::DnsCache& dnsCache, hostname::RdnsResolver& rdnsResolver);
 
 		void Run();
 		void Stop();
@@ -70,6 +72,9 @@ namespace netscope::storage
 		std::vector<PersistenceEvent> m_batchBuffer;
 		std::unordered_map<uint32_t, int64_t> m_processIdCache;
 
+		const hostname::DnsCache& m_dnsCache;
+		hostname::RdnsResolver& m_rdnsResolver;
+
 	private:
 		void AccumulateBandwidth(int64_t processId, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta);
 
@@ -89,5 +94,7 @@ namespace netscope::storage
 		DatabaseResult Persist(const processing::FlowUpdatedEvent& event);
 		DatabaseResult Persist(const processing::FlowClosedEvent& event);
 		DatabaseResult Persist(const processing::ProcessClosedEvent& event);
+
+		std::optional<std::string> ResolveHostname(const flow::IPAddress& ip);
 	};
 }

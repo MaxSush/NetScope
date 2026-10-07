@@ -9,6 +9,10 @@
 
 #include <lifecycle/LifecycleScheduler.h>
 
+#include <cache/DnsCache.h>
+#include <resolver/RdnsResolver.h>
+#include <loader/HostnameLoader.h>
+
 #include <persistence/PersistenceService.h>
 #include <database/SQLiteDatabase.h>
 
@@ -40,6 +44,10 @@ namespace netscope
 
 		processing::LifecycleScheduler m_lifecycleScheduler;
 
+		hostname::DnsCache m_dnsCache;
+		hostname::RdnsResolver m_rdnsResolver;
+		HostnameLoader m_hostnameLoader;
+
 		storage::SQLiteDatabase m_database;
 		storage::PersistenceService m_persistenceService;
 
@@ -48,8 +56,12 @@ namespace netscope
 		std::thread m_dispatcherThread;
 		std::thread m_reportThread;
 		std::thread m_lifecycleThread;
+		std::thread m_hostnameThread;
+		std::thread m_rdnsThread;
 		std::thread m_retentionThread;
 
 		std::atomic<bool> m_running = false;
+
+		bool m_hostnameAvailable = false;
 	};
 }
