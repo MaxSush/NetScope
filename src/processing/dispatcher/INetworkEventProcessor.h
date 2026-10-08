@@ -1,5 +1,5 @@
 #pragma once
-#include <shared/NetworkEvent.h>
+#include <event/NetworkEvent.h>
 
 namespace netscope
 {

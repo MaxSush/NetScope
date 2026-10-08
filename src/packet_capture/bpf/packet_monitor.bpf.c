@@ -34,7 +34,7 @@ struct
 	__type(value, __u8);
 } tracked_pids SEC(".maps");
 
-static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u64 bytes, __u8 direction)
+static __always_inline int emit_tcp_event(struct sock* sk, __u8 protocol, __u64 bytes, __u8 direction)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	__u32 pid = pid_tgid >> 32;
@@ -53,7 +53,6 @@ static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u
 	event->protocol = protocol;
 	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
 
-
 	event->data.packet.bytes = bytes;
 	event->data.packet.direction = direction;
 
@@ -61,6 +60,12 @@ static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u
 	{
 		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
 		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+		if ((event->source.ipv4 & 0xFF) == 0x7F ||
+			(event->destination.ipv4 & 0xFF) == 0x7F)
+		{
+			bpf_ringbuf_discard(event, 0);
+			return 0;
+		}
 	}
 	else if(event->family == AF_INET6)
 	{
@@ -78,11 +83,10 @@ static __always_inline int emit_packet_event(struct sock* sk, __u8 protocol, __u
 	return 0;
 }
 
-
 SEC("fentry/tcp_sendmsg")
 int BPF_PROG(trace_send, struct sock *sk, struct msghdr *msg, size_t size, size_t copied, struct ubuf_info *uarg)
 {
-	return emit_packet_event(sk, IPPROTO_TCP, size, DIRECTION_OUT);
+	return emit_tcp_event(sk, IPPROTO_TCP, size, DIRECTION_OUT);
 }
 
 SEC("fexit/tcp_recvmsg")
@@ -92,14 +96,72 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 		return 0;
 	}
 
-	return emit_packet_event(sk, IPPROTO_TCP, (__u64)ret, DIRECTION_IN);
+	return emit_tcp_event(sk, IPPROTO_TCP, (__u64)ret, DIRECTION_IN);
 }
+
+
+static __always_inline int emit_udp_event(struct sock* sk, struct msghdr* msg, __u64 bytes, __u8 direction)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	__u32 pid = pid_tgid >> 32;
+
+	struct bpf_network_event* event = bpf_ringbuf_reserve(&events, sizeof(*event), 0);
+	if (!event)
+		return 0;
+
+	event->pid = pid;
+	event->tid = (__u32)pid_tgid;
+	event->type = PACKET;
+	event->protocol = IPPROTO_UDP;
+	event->family = BPF_CORE_READ(sk, __sk_common.skc_family);
+	event->data.packet.bytes = bytes;
+	event->data.packet.direction = direction;
+
+	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
+	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+
+	if (event->family == AF_INET)
+	{
+		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+
+		if (event->destination.ipv4 == 0)
+		{
+			struct sockaddr_in* sin;
+			sin = (struct sockaddr_in*)BPF_CORE_READ(msg, msg_name);
+			if (sin)
+			{
+				event->destination.ipv4 = BPF_CORE_READ(sin, sin_addr.s_addr);
+				event->destination_port = bpf_ntohs(BPF_CORE_READ(sin, sin_port));
+			}
+		}
+	}
+	else if (event->family == AF_INET6)
+	{
+		struct in6_addr saddr = BPF_CORE_READ(sk, __sk_common.skc_v6_rcv_saddr);
+		struct in6_addr daddr = BPF_CORE_READ(sk, __sk_common.skc_v6_daddr);
+		__builtin_memcpy(event->source.ipv6, &saddr, 16);
+		__builtin_memcpy(event->destination.ipv6, &daddr, 16);
+	}
+
+	if (event->family == AF_INET &&
+		((event->source.ipv4 & 0xFF) == 0x7F ||
+			(event->destination.ipv4 & 0xFF) == 0x7F))
+	{
+		bpf_ringbuf_discard(event, 0);
+		return 0;
+	}
+
+	bpf_ringbuf_submit(event, 0);
+	return 0;
+}
+
 
 SEC("fentry/udp_sendmsg")
 int BPF_PROG(trace_udp_send, struct sock* sk, struct msghdr* msg, size_t size)
 {
 	//bpf_printk("UDP packet captured DIRECTION_OUT %d", IPPROTO_UDP);
-	return emit_packet_event(sk, IPPROTO_UDP, size, DIRECTION_OUT);
+	return emit_udp_event(sk, msg, size, DIRECTION_OUT);
 }
 
 SEC("fexit/udp_recvmsg")
@@ -110,7 +172,7 @@ int BPF_PROG(trace_udp_recv, struct sock* sk, struct msghdr* msg, size_t len, in
 		return 0;
 	}
 	//bpf_printk("UDP packet captured DIRECTION_IN %d", IPPROTO_UDP);
-	return emit_packet_event(sk, IPPROTO_UDP, (__u64)ret, DIRECTION_IN);
+	return emit_udp_event(sk, msg, (__u64)ret, DIRECTION_IN);
 }
 
 SEC("fentry/tcp_set_state")
@@ -137,6 +199,13 @@ int BPF_PROG(trace_set_state, struct sock* sk, int state)
 	{
 		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
 		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+
+		if ((event->source.ipv4 & 0xFF) == 0x7F ||
+			(event->destination.ipv4 & 0xFF) == 0x7F)
+		{
+			bpf_ringbuf_discard(event, 0);
+			return 0;
+		}
 	}
 	else
 	{

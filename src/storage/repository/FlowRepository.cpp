@@ -64,23 +64,23 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        result = statement->Bind(2, static_cast<uint32_t>(flowSnapshot.key.protocol));
+        result = statement->Bind(2, static_cast<uint32_t>(flowSnapshot.protocol));
         if (!result)
             return result;
         
-        result = statement->Bind(3, flowSnapshot.key.source.address.ToString());
+        result = statement->Bind(3, flowSnapshot.source.address.ToString());
         if (!result)
             return result;
 
-        result = statement->Bind(4, static_cast<uint32_t>(flowSnapshot.key.source.port));
+        result = statement->Bind(4, static_cast<uint32_t>(flowSnapshot.source.port));
         if (!result)
             return result;
 
-        result = statement->Bind(5, flowSnapshot.key.destination.address.ToString());
+        result = statement->Bind(5, flowSnapshot.destination.address.ToString());
         if (!result)
             return result;
 
-        result = statement->Bind(6, static_cast<uint32_t>(flowSnapshot.key.destination.port));
+        result = statement->Bind(6, static_cast<uint32_t>(flowSnapshot.destination.port));
         if (!result)
             return result;
 
@@ -123,13 +123,13 @@ namespace netscope::storage
         if (!result)
             return result;
 
-        result = statement->Bind(15, ToCloseReasonString(flowSnapshot.closeReason));
+        result = statement->Bind(15, ToCloseReasonString(flowSnapshot.terminationInfo.closeReason));
         if (!result)
             return result;
 
         if (statement->Execute() != StepResult::DONE)
         {
-            return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::EXECUTE_FAILED, "Sql Step execution Failed.");
+            return DatabaseResult::Failure(DatabaseStatus::FAILED, DatabaseError::EXECUTE_FAILED, "FlowRepository::Upsert -> Sql Step execution Failed.");
         }
 		return DatabaseResult::Ok();
 	}

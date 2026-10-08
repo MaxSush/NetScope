@@ -10,7 +10,7 @@ target_include_directories(NetscopeHostname PUBLIC
 )
 
 target_link_libraries(NetscopeHostname PUBLIC
-	NetScopeCore
+	NetScopeShared
 	NetScopeFlow
 )
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <functional>
-#include <model/Flow.h>
+
+#include "FlowSnapshot.h"
 
 namespace netscope::flow
 {
@@ -15,17 +15,12 @@ namespace netscope::flow
 
 	struct FlowResult
 	{
-		std::reference_wrapper<const Flow> flow;
+        FlowSnapshot snapshot;
 		FlowChange change;
-
-        const Flow& GetFlow() const
-        {
-            return flow.get();
-        }
 
         FlowSnapshot GetSnapshot() const
         {
-            return flow.get().GetSnapshot();
+            return snapshot;
         }
 
         bool IsCreated() const

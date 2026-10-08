@@ -1,7 +1,7 @@
 #include "NetworkCoordinator.h"
 
-#include <context/LifecycleContext.h>
-#include <storage/FlowResult.h>
+#include <pipeline/LifecycleContext.h>
+#include <model/FlowResult.h>
 #include <logger/Logger.h>
 
 

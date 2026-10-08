@@ -21,9 +21,8 @@ target_link_libraries(NetScopeStorage
     PRIVATE
     SQLite::SQLite3
 
-    NetScopeProcess
-    NetScopeCore
-    NetScopeFlow
+    NetScopeShared
+    NetscopeHostname
 )
 
 target_compile_features(NetScopeStorage PUBLIC cxx_std_17)

@@ -1,13 +1,14 @@
 #pragma once
 
-#include "FlowStatistics.h"
-#include "FlowKey.h"
-#include <shared/NetworkEvent.h>
+#include <model/FlowStatistics.h>
+#include <model/FlowKey.h>
+#include <model/FlowSnapshot.h>
+#include <model/FlowState.h>
+#include <event/NetworkEvent.h>
+
 #include <time/TimeUtils.h>
 
 #include <sys/types.h>
-#include "FlowSnapshot.h"
-#include "FlowState.h"
 #include <optional>
 
 
@@ -16,7 +17,7 @@ namespace netscope::flow
 	class Flow
 	{
 	public:
-		explicit Flow(const FlowKey& key, pid_t pid);
+		explicit Flow(const NetworkEvent& event, const FlowKey& key);
 
 		void Update(const NetworkEvent& event);
 
@@ -28,30 +29,21 @@ namespace netscope::flow
 
 		FlowSnapshot GetSnapshot() const;
 
-		inline FlowState GetState() const { return m_state; }
+		inline FlowState GetState() const { return m_snapshot.state; }
 		void SetState(FlowState state);
 
 		void SetCloseReason(CloseReason reason);
+		void SetTerminationInfo(FlowTerminationInfo info);
 		
-		inline void SetCloseInfo(FlowTerminationInfo reason) { m_closeInfo = reason; }
-		inline std::optional<FlowTerminationInfo> GetCloseReason() const { return m_closeInfo; }
+		inline void SetCloseInfo(FlowTerminationInfo reason) { m_snapshot.terminationInfo = reason; }
+		inline std::optional<FlowTerminationInfo> GetCloseReason() const { return m_snapshot.terminationInfo; }
 
 		bool CanEvict(Steady_TimePoint now) const;
 		bool HasTcpIdleTimeout(Steady_TimePoint now) const;
 		bool HasUdpIdleTimeout(Steady_TimePoint now) const;
 	private:
-		FlowKey m_key;
-
-		pid_t m_pid;
-
-		FlowStatistics m_statistics;
+		FlowSnapshot m_snapshot;
 
 		Steady_TimePoint m_lastActivity;
-
-		System_TimePoint m_firstSeen;
-		System_TimePoint m_lastSeen;
-
-		FlowState m_state = FlowState::ACTIVE;
-		FlowTerminationInfo m_closeInfo;
 	};
 }

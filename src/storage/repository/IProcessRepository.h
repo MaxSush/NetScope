@@ -1,7 +1,7 @@
 #pragma once
 #include "database/DatabaseResult.h"
 #include <utilities/Expected.h>
-#include <ProcessInfo.h>
+#include <model/ProcessInfo.h>
 #include <cstdint>
 
 namespace netscope::storage

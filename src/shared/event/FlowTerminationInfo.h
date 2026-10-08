@@ -7,8 +7,8 @@ namespace netscope
 {
 	struct FlowTerminationInfo
 	{
-		std::optional<CloseReason> closeReason = std::nullopt;
-		uint8_t shutdownMask;
-		uint32_t kernelError;
+		CloseReason closeReason = CloseReason::NOT_CLOSED;
+		uint8_t shutdownMask = 0;
+		uint32_t kernelError = 0;
 	};
 }

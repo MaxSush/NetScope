@@ -2,7 +2,7 @@
 
 #include "storage/FlowTable.h"
 #include <pipeline/IContextProcessor.h>
-#include <lifecycle/ILifecycleProcessor.h>
+#include <pipeline/ILifecycleProcessor.h>
 
 namespace netscope::flow
 {

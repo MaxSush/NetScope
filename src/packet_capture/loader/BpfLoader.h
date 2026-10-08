@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shared/NetworkEvent.h"
+#include <event/NetworkEvent.h>
 #include <event/EventQueue.h>
 
 

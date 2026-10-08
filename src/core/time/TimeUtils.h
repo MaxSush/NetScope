@@ -25,10 +25,6 @@ namespace netscope
 		return System_TimePoint(Milliseconds(value));
 	}
 
-	//inline std::string Format(System_TimePoint time)
-	//{
-
-	//}
 }
 
 

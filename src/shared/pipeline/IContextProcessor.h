@@ -1,5 +1,5 @@
 #pragma once
-#include <context/ProcessingContext.h>
+#include <pipeline/ProcessingContext.h>
 
 namespace netscope::processing
 {

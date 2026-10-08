@@ -2,9 +2,11 @@
 
 #include <utility>
 #include <mutex>
-#include <context/LifecycleContext.h>
 #include <unordered_set>
-#include <ProcessResult.h>
+
+#include <pipeline/LifecycleContext.h>
+#include <model/ProcessResult.h>
+#include "model/Flow.h"
 
 namespace netscope::flow
 {
@@ -30,7 +32,7 @@ namespace netscope::flow
 			// Flow Already Closed
 			if (it->second.GetState() == FlowState::CLOSED)
 			{
-				return { std::ref(it->second), FlowChange::UPDATED };
+				return { it->second.GetSnapshot(), FlowChange::UPDATED};
 			}
 
 			FlowChange change = FlowChange::UPDATED;
@@ -40,11 +42,11 @@ namespace netscope::flow
 				change = FlowChange::RESUMED;
 			}
 			it->second.Update(event);
-			return {std::ref(it->second), change };
+			return { it->second.GetSnapshot(), change };
 		}
-		auto result = m_flows.emplace(key, Flow(key, event.pid));
+		auto result = m_flows.emplace(key, Flow(event, key));
 		result.first->second.Update(event);
-		return { std::ref(result.first->second), FlowChange::CREATED };
+		return { result.first->second.GetSnapshot(), FlowChange::CREATED };
 	}
 
 	std::optional<FlowResult> FlowTable::CloseFlows(const FlowKey& key, FlowTerminationInfo info)
@@ -63,9 +65,9 @@ namespace netscope::flow
 		}
 
 		it->second.SetState(FlowState::CLOSED);
-		it->second.SetCloseInfo(info);
+		it->second.SetTerminationInfo(info);
 		
-		return FlowResult{ std::ref(it->second), FlowChange::CLOSED };
+		return FlowResult{ it->second.GetSnapshot(), FlowChange::CLOSED };
 	}
 
 	std::vector<FlowResult> FlowTable::CloseFlowsByPid(const uint32_t pid, CloseReason reason)
@@ -79,7 +81,7 @@ namespace netscope::flow
 			{
 				flow.SetState(FlowState::CLOSED);
 				flow.SetCloseReason(reason);
-				results.emplace_back(FlowResult{ std::ref(flow), FlowChange::CLOSED });
+				results.emplace_back(FlowResult{ flow.GetSnapshot(), FlowChange::CLOSED });
 			}
 		}
 
@@ -134,7 +136,7 @@ namespace netscope::flow
 				{
 					flow.SetState(FlowState::CLOSED);
 					flow.SetCloseReason(CloseReason::PROCESS_EXITED);
-					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::CLOSED });
+					context.flowChanges.emplace_back(FlowResult{ flow.GetSnapshot(), FlowChange::CLOSED });
 					continue;
 				}
 
@@ -142,7 +144,7 @@ namespace netscope::flow
 				if (flow.GetState() == FlowState::ACTIVE && flow.IsIdle(context.now))
 				{
 					flow.SetState(FlowState::IDLE);
-					context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::IDLE });
+					context.flowChanges.emplace_back(FlowResult{ flow.GetSnapshot(), FlowChange::IDLE });
 					continue;
 				}
 
@@ -164,7 +166,7 @@ namespace netscope::flow
 					{
 						flow.SetState(FlowState::CLOSED);
 						flow.SetCloseReason(CloseReason::IDLE_TIMEOUT);
-						context.flowChanges.emplace_back(FlowResult{ flow, FlowChange::CLOSED });
+						context.flowChanges.emplace_back(FlowResult{ flow.GetSnapshot(), FlowChange::CLOSED });
 					}
 				}
 			}

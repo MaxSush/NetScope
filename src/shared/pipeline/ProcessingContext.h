@@ -1,8 +1,9 @@
 #pragma once
-#include <shared/NetworkEvent.h>
+#include <event/NetworkEvent.h>
+#include <model/FlowResult.h>
+#include <model/ProcessResult.h>
+
 #include <optional>
-#include <storage/FlowResult.h>
-#include <ProcessResult.h>
 
 namespace netscope::processing
 {

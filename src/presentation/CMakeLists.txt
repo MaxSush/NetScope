@@ -1,8 +1,7 @@
 add_library(NetScopePresentation STATIC
-    
-   
     "aggregation/ProcessAggregator.h" "aggregation/ProcessAggregator.cpp"
- "console/ConsoleReporter.h" "console/ConsoleReporter.cpp")
+    "console/ConsoleReporter.h" "console/ConsoleReporter.cpp"
+)
 
 target_include_directories(NetScopePresentation
     PUBLIC
@@ -13,6 +12,7 @@ target_link_libraries(NetScopePresentation
     PUBLIC
     NetScopeFlow
     NetScopeProcess
+    NetScopeShared
 )
 
 target_compile_features(NetScopePresentation PUBLIC cxx_std_17)

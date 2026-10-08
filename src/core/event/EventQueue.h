@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <stdexcept>
+#include <optional>
 #include <time/TimeUtils.h>
 
 namespace netscope
@@ -15,8 +16,8 @@ namespace netscope
 		void Push(const T& item);
 		T Pop();
 
-		bool TryPop(T& item);
-		bool PopFor(T& item, Milliseconds timeout);
+		std::optional<T> TryPop();
+		std::optional<T> PopFor(Milliseconds timeout);
 
 		bool Empty() const;
 		size_t Size() const;
@@ -60,22 +61,22 @@ namespace netscope
 	}
 
 	template<typename T>
-	inline bool EventQueue<T>::TryPop(T& item)
+	inline std::optional<T> EventQueue<T>::TryPop()
 	{
 		std::lock_guard lock(m_mutex);
 		if (m_queue.empty())
 		{
-			return false;
+			return std::nullopt;
 		}
 
-		item = std::move(m_queue.front());
+		T item = std::move(m_queue.front());
 		m_queue.pop();
 
-		return true;
+		return item;
 	}
 
 	template<typename T>
-	inline bool EventQueue<T>::PopFor(T& item, Milliseconds timeout)
+	inline std::optional<T> EventQueue<T>::PopFor(Milliseconds timeout)
 	{
 		std::unique_lock lock(m_mutex);
 		bool ready = m_condition.wait_for(lock, timeout, 
@@ -83,19 +84,21 @@ namespace netscope
 				return m_shutdown || !m_queue.empty();
 			}
 		);
+
 		if (!ready)
 		{
-			if (m_shutdown)
-			{
-				throw std::runtime_error("Queue shutdown");
-			}
-			return false;
+			return std::nullopt;
 		}
 
-		item = std::move(m_queue.front());
+		if (m_shutdown)
+		{
+			throw std::runtime_error("Queue shutdown");
+		}
+
+		T item = std::move(m_queue.front());
 		m_queue.pop();
 
-		return true;
+		return item;
 	}
 
 	template<typename T>

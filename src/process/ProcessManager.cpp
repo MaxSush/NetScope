@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <mutex>
 #include <utility>
+#include <unistd.h>
 
-#include <context/LifecycleContext.h>
+#include <pipeline/LifecycleContext.h>
 
 namespace fs = std::filesystem;
 
@@ -193,8 +194,13 @@ namespace netscope::process
 				{
 					iss >> temp;
 				}
-				
-				iss >> info.start_time;
+				uint64_t raw_ticks;
+				iss >> raw_ticks;
+
+				uint64_t boot_time = GetBootTimeSeconds();
+				long ticks_per_sec = sysconf(_SC_CLK_TCK);
+
+				info.start_time = (boot_time + (raw_ticks / ticks_per_sec)) * 1000;
 			}
 		}
 
@@ -231,6 +237,22 @@ namespace netscope::process
 		it->second.process.end_time = ToUnixMilliseconds(System_Clock::now());
 
 		context.process = ProcessResult{ std::ref(it->second.process), ProcessChange::EXITED };
+	}
+
+	uint64_t ProcessManager::GetBootTimeSeconds() const
+	{
+		std::ifstream stat("/proc/stat");
+		std::string line;
+		while (std::getline(stat, line))
+		{
+			if (line.substr(0, 5) == "btime")
+			{
+				uint64_t btime;
+				std::istringstream(line.substr(6)) >> btime;
+				return btime;
+			}
+		}
+		return 0;
 	}
 
 }

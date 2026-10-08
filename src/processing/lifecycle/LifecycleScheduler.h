@@ -1,7 +1,7 @@
 #pragma once
 
 #include <coordinator/NetworkCoordinator.h>
-#include "ILifecycleProcessor.h"
+#include <pipeline/ILifecycleProcessor.h>
 #include <atomic>
 
 namespace netscope::processing

@@ -1,6 +1,6 @@
 #pragma once
 #include <model/FlowSnapshot.h>
-#include <ProcessInfo.h>
+#include <model/ProcessInfo.h>
 
 namespace netscope::processing
 {

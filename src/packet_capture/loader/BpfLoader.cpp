@@ -1,7 +1,7 @@
 #include "BpfLoader.h"
 
 #include "shared/BpfNetworkEvent.h"
-#include "shared/NetworkEvent.h"
+#include <event/NetworkEvent.h>
 
 #include <cstring> 
 #include <bpf/libbpf.h>

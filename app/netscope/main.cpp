@@ -6,8 +6,16 @@
 #include <NetscopeApplication.h>
 #include <config/ConfigLoader.h>
 
+#include <csignal>
 
 using namespace netscope;
+
+std::atomic<bool> g_running(true);
+
+void SignalHandler(int)
+{
+	g_running = false;
+}
 
 int main(int argc, char* argv[])
 {
@@ -32,6 +40,9 @@ int main(int argc, char* argv[])
 	LOG_INFO("BPF Object: {}", config.bpfObjectPath);
 	LOG_INFO("Ignored processes: {}", config.ignoredProcesses.size());
 
+	std::signal(SIGINT, SignalHandler);
+	std::signal(SIGTERM, SignalHandler);
+
 	NetscopeApplication app;
 
 	if (!app.Start())
@@ -39,7 +50,12 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	std::this_thread::sleep_for(std::chrono::seconds(200));
+	while (g_running)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
+	LOG_INFO("Shutdown signal received. Stopping NetScope...");
 
 	app.Stop();
 

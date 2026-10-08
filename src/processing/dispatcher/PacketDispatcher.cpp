@@ -19,9 +19,18 @@ namespace netscope::processing
 			NetworkEvent event = m_queue.Pop();
 			m_pipeline.Process(event);
 		}
+		catch (const std::runtime_error&)
+		{
+			// Queue shut down, silently exit
+			return;
+		}
+		catch (const std::exception& e)
+		{
+			LOG_ERROR("PacketDispatcher::Run Error: {}", e.what());
+		}
 		catch (...)
 		{
-			LOG_ERROR("PacketDispatcher::Run Unkown Error occured");
+			LOG_ERROR("PacketDispatcher::Run Unknown Error occurred");
 		}
 	}
 }

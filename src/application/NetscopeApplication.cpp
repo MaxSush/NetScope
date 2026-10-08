@@ -157,8 +157,6 @@ namespace netscope
 
 		m_rdnsResolver.Stop();
 
-		m_capture.Stop();
-
 		m_queue.Shutdown();
 		m_persistenceService.Stop();
 
@@ -202,6 +200,7 @@ namespace netscope
 			m_rdnsThread.join();
 		}
 
+		m_capture.Stop();
 		m_hostnameLoader.Unload();
 	}
 

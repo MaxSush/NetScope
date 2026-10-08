@@ -4,43 +4,40 @@
 
 namespace netscope::flow
 {
-	Flow::Flow(const FlowKey& key, pid_t pid)
-		:
-		m_key(key),
-		m_pid(pid)
+	Flow::Flow(const NetworkEvent& event, const FlowKey& key)
+		: m_snapshot(event)
 	{
 		m_lastActivity = Steady_Clock::now();
-		m_firstSeen = System_Clock::now();
-		m_lastSeen = System_Clock::now();
-
-		m_closeInfo.closeReason = CloseReason::NOT_CLOSED;
+		m_snapshot.firstSeen = System_Clock::now();
+		m_snapshot.lastSeen = System_Clock::now();
+		m_snapshot.key = key;
 	}
 
 	void Flow::Update(const NetworkEvent& event)
 	{
-		m_lastSeen = System_Clock::now();
+		m_snapshot.lastSeen = System_Clock::now();
 		m_lastActivity = Steady_Clock::now();
 
 		if (event.direction == Direction::OUTGOING)
 		{
-			m_statistics.uploadPackets++;
-			m_statistics.uploadBytes += event.bytes;
+			m_snapshot.statistics.uploadPackets++;
+			m_snapshot.statistics.uploadBytes += event.bytes;
 		} 
 		else
 		{
-			m_statistics.downloadPackets++;
-			m_statistics.downloadBytes += event.bytes;
+			m_snapshot.statistics.downloadPackets++;
+			m_snapshot.statistics.downloadBytes += event.bytes;
 		}
 	}
 
 	pid_t Flow::GetPID() const
 	{
-		return m_pid;
+		return m_snapshot.pid;
 	}
 
 	const FlowKey& Flow::GetKey() const
 	{
-		return m_key;
+		return m_snapshot.key;
 	}
 
 	bool Flow::IsIdle(Steady_TimePoint now) const
@@ -55,23 +52,15 @@ namespace netscope::flow
 
 	FlowSnapshot Flow::GetSnapshot() const
 	{
-		FlowSnapshot snapshot;
-		snapshot.key = m_key;
-		snapshot.pid = m_pid;
-		snapshot.statistics = m_statistics;
-		snapshot.firstSeen = m_firstSeen;
-		snapshot.lastSeen = m_lastSeen;
+		auto snapshot = m_snapshot;
 		snapshot.IdleTime = GetIdleTime();
-
-		snapshot.state = m_state;
-		snapshot.closeReason = m_closeInfo.closeReason.value_or(CloseReason::NOT_CLOSED);
 
 		return snapshot;
 	}
 
 	void Flow::SetState(FlowState state)
 	{
-		m_state = state;
+		m_snapshot.state = state;
 		if (state == FlowState::CLOSED)
 		{
 			m_lastActivity = Steady_Clock::now();
@@ -80,12 +69,17 @@ namespace netscope::flow
 
 	void Flow::SetCloseReason(CloseReason reason)
 	{
-		m_closeInfo.closeReason = reason;
+		m_snapshot.terminationInfo.closeReason = reason;
+	}
+
+	void Flow::SetTerminationInfo(FlowTerminationInfo info)
+	{
+		m_snapshot.terminationInfo = info;
 	}
 
 	bool Flow::CanEvict(Steady_TimePoint now) const
 	{
-		return m_state == FlowState::CLOSED && (now - m_lastActivity) >= Config::Get().flowEvictionTimeout;
+		return m_snapshot.state == FlowState::CLOSED && (now - m_lastActivity) >= Config::Get().flowEvictionTimeout;
 	}
 
 	bool Flow::HasTcpIdleTimeout(Steady_TimePoint now) const

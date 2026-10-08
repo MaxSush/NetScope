@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ProcessInfo.h"
+#include <model/ProcessInfo.h>
 #include <pipeline/IContextProcessor.h>
-#include <lifecycle/ILifecycleProcessor.h>
-#include <runtime/IBpfTracker.h>
+#include <pipeline/ILifecycleProcessor.h>
+#include <tracker/IBpfTracker.h>
 
 #include <config/Config.h>
 
@@ -56,6 +56,8 @@ namespace netscope::process
 		bool IsPidDirectory(const std::string& name) const;
 		std::optional<ProcessInfo> ReadProcess(const uint32_t pid) const;
 		void MarkTerminated(uint32_t pid, processing::ProcessingContext& context);
+
+		uint64_t GetBootTimeSeconds() const;
 
 		std::unordered_map<uint32_t, CachedProcess> m_cache;
 

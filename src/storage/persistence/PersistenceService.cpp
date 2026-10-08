@@ -30,7 +30,7 @@ namespace netscope::storage
 			auto res = PersistBatch();
 			if (!res)
 			{
-				LOG_ERROR(res.message);
+				LOG_ERROR("PersistBatch() failed: " + res.message);
 			}
 		}
 		catch (const std::runtime_error&)
@@ -166,10 +166,10 @@ namespace netscope::storage
 
 		while (m_batchBuffer.size() < Config::Get().persistenceBatchSize)
 		{
-			PersistenceEvent event;
-			if (m_queue.TryPop(event))
+			auto event = m_queue.TryPop();
+			if (event)
 			{
-				m_batchBuffer.push_back(std::move(event));
+				m_batchBuffer.push_back(std::move(*event));
 				continue;
 			}
 
@@ -181,11 +181,12 @@ namespace netscope::storage
 
 			auto remaining = std::chrono::duration_cast<Milliseconds>(deadline - now);
 
-			if (!m_queue.PopFor(event, remaining))
+			auto popped = m_queue.PopFor(remaining);
+			if (!popped.has_value())
 			{
 				break;
 			}
-			m_batchBuffer.push_back(std::move(event));
+			m_batchBuffer.push_back(std::move(*popped));
 		}
 	}
 

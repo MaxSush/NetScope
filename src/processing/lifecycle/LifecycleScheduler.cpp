@@ -1,5 +1,5 @@
 #include "LifecycleScheduler.h"
-#include <context/LifecycleContext.h>
+#include <pipeline/LifecycleContext.h>
 
 namespace netscope::processing
 {

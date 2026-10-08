@@ -2,7 +2,8 @@
 
 #include "FlowHash.h"
 #include <time/TimeUtils.h>
-#include "FlowResult.h"
+#include <model/FlowResult.h>
+#include <model/Flow.h>
 
 #include <unordered_map>
 #include <shared_mutex>

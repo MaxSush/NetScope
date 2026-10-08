@@ -1,6 +1,6 @@
 #include "FlowManager.h"
 
-#include <context/LifecycleContext.h>
+#include <pipeline/LifecycleContext.h>
 #include <stdexcept>
 
 namespace netscope::flow

@@ -1,11 +1,11 @@
 #pragma once
-#include<context/ProcessingContext.h>
+#include <pipeline/ProcessingContext.h>
 #include <event/DomainEventBus.h>
 #include <activity/FlowUpdatedEvent.h>
 #include <activity/FlowCreatedEvent.h>
 #include <activity/FlowClosedEvent.h>
 #include <activity/ProcessClosedEvent.h>
-#include <lifecycle/ILifecycleProcessor.h>
+#include <pipeline/ILifecycleProcessor.h>
 
 namespace netscope::processing
 {
