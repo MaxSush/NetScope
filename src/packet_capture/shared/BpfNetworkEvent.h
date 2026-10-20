@@ -44,6 +44,7 @@ namespace netscope
 
         uint16_t source_port;
         uint16_t destination_port;
+        uint32_t ifindex;
     };
 
     static_assert(sizeof(BpfNetworkEvent) == 72);

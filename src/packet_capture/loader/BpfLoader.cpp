@@ -93,6 +93,8 @@ namespace netscope
 			event.sourceAddress = flow::IPAddress::IPv6(srcAddr);
 			event.destinationAddress = flow::IPAddress::IPv6(dstAddr);
 		}
+
+		event.ifindex = packet->ifindex;
 		queue->Push(event);
 
 		return 0;

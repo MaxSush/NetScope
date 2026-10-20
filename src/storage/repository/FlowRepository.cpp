@@ -8,7 +8,7 @@ namespace netscope::storage
 	{
 	}
 
-	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot, int64_t processId, const std::optional<std::string>& hostname)
+	DatabaseResult FlowRepository::Upsert(const flow::FlowSnapshot& flowSnapshot, int64_t processId, const std::optional<std::string>& hostname, const std::optional<std::string>& interfaceName)
 	{
 		constexpr auto UpsertSql = R"sql(
             INSERT INTO flows
@@ -27,11 +27,12 @@ namespace netscope::storage
                 first_seen,
                 last_seen,
                 state,
-                close_reason
+                close_reason,
+                interface_name
             )
             VALUES
             (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON CONFLICT
             (
@@ -50,7 +51,8 @@ namespace netscope::storage
                 download_packets = excluded.download_packets,
                 last_seen = excluded.last_seen,
                 state = excluded.state,
-                close_reason = excluded.close_reason;
+                close_reason = excluded.close_reason,
+                interface_name = COALESCE(excluded.interface_name, interface_name);
 		)sql";
 
         std::unique_ptr<Statement> statement;
@@ -125,6 +127,17 @@ namespace netscope::storage
 
         result = statement->Bind(15, ToCloseReasonString(flowSnapshot.terminationInfo.closeReason));
         if (!result)
+            return result;
+
+        if (interfaceName.has_value() && !interfaceName->empty())
+        {
+            result = statement->Bind(16, *interfaceName);
+        }
+        else
+        {
+            result = statement->BindNull(16);
+        }
+        if (!result) 
             return result;
 
         if (statement->Execute() != StepResult::DONE)

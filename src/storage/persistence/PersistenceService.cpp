@@ -12,6 +12,7 @@ namespace netscope::storage
 		m_flowRepository(database),
 		m_bandwidthRepository(database),
 		m_appStateRepository(database),
+		m_interfaceBandwidthRepository(database),
 		m_db(database),
 		m_dnsCache(dnsCache),
 		m_rdnsResolver(rdnsResolver)
@@ -93,6 +94,13 @@ namespace netscope::storage
 			  AND end_time IS NOT NULL;
 		)sql";
 		m_db.Execute(PurgeOrphanSql);
+
+		// 5. Roll up interface bandwidth
+		m_interfaceBandwidthRepository.RollUpDaily(yesterdayStart);
+
+		// 6. Purge interface bandwidth data
+		m_interfaceBandwidthRepository.PurgeHourlyBefore(hourlyCutoff);
+		m_interfaceBandwidthRepository.PurgeDailyBefore(dailyCutoff);
 
 		res = m_db.Commit();
 		if (!res)
@@ -348,8 +356,9 @@ namespace netscope::storage
 
 		
 		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+		auto interfaceName = ResolveInterfaceName(event.flowSnapshot);
 
-		res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
+		res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname, interfaceName);
 		if (!res)
 		{
 			return res;
@@ -357,6 +366,11 @@ namespace netscope::storage
 
 		const auto& stats = event.flowSnapshot.statistics;
 		AccumulateBandwidth(processId, event.flowSnapshot, stats);
+
+		if (interfaceName.has_value())
+		{
+			AccumulateInterfaceBandwidth(*interfaceName, event.flowSnapshot, stats);
+		}
 
 		m_lastPersistedStats[event.flowSnapshot.key] = stats;
 
@@ -376,34 +390,40 @@ namespace netscope::storage
 		}
 
 		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+		auto interfaceName = ResolveInterfaceName(event.flowSnapshot);
 
-		auto res = m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
+		auto res = m_flowRepository.Upsert(event.flowSnapshot, processId, hostname, interfaceName);
 		if (!res)
 		{
 			return res;
 		}
 
 		// Compute delta
-		const auto& currentStats = event.flowSnapshot.statistics;
+		const auto& stats = event.flowSnapshot.statistics;
 		flow::FlowStatistics delta{};
 
 		auto it = m_lastPersistedStats.find(event.flowSnapshot.key);
 		if (it != m_lastPersistedStats.end())
 		{
 			const auto& prev = it->second;
-			delta.uploadBytes = currentStats.uploadBytes - prev.uploadBytes;
-			delta.downloadBytes = currentStats.downloadBytes - prev.downloadBytes;
-			delta.uploadPackets = currentStats.uploadPackets - prev.uploadPackets;
-			delta.downloadPackets = currentStats.downloadPackets - prev.downloadPackets;
+			delta.uploadBytes = stats.uploadBytes - prev.uploadBytes;
+			delta.downloadBytes = stats.downloadBytes - prev.downloadBytes;
+			delta.uploadPackets = stats.uploadPackets - prev.uploadPackets;
+			delta.downloadPackets = stats.downloadPackets - prev.downloadPackets;
 		}
 		else
 		{
-			delta = currentStats;
+			delta = stats;
 		}
 
 		AccumulateBandwidth(processId, event.flowSnapshot, delta);
 
-		m_lastPersistedStats[event.flowSnapshot.key] = currentStats;
+		if (interfaceName.has_value())
+		{
+			AccumulateInterfaceBandwidth(*interfaceName, event.flowSnapshot, delta);
+		}
+
+		m_lastPersistedStats[event.flowSnapshot.key] = stats;
 
 		return DatabaseResult::Ok();
 	}
@@ -420,31 +440,37 @@ namespace netscope::storage
 		}
 
 		auto hostname = ResolveHostname(event.flowSnapshot.key.destination.address);
+		auto interfaceName = ResolveInterfaceName(event.flowSnapshot);
 
-		auto res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname);
+		auto res =  m_flowRepository.Upsert(event.flowSnapshot, processId, hostname, interfaceName);
 		if (!res)
 		{
 			return res;
 		}
 
-		const auto& currentStats = event.flowSnapshot.statistics;
+		const auto& stats = event.flowSnapshot.statistics;
 		flow::FlowStatistics delta{};
 
 		auto it = m_lastPersistedStats.find(event.flowSnapshot.key);
 		if (it != m_lastPersistedStats.end())
 		{
 			const auto& prev = it->second;
-			delta.uploadBytes = currentStats.uploadBytes - prev.uploadBytes;
-			delta.downloadBytes = currentStats.downloadBytes - prev.downloadBytes;
-			delta.uploadPackets = currentStats.uploadPackets - prev.uploadPackets;
-			delta.downloadPackets = currentStats.downloadPackets - prev.downloadPackets;
+			delta.uploadBytes = stats.uploadBytes - prev.uploadBytes;
+			delta.downloadBytes = stats.downloadBytes - prev.downloadBytes;
+			delta.uploadPackets = stats.uploadPackets - prev.uploadPackets;
+			delta.downloadPackets = stats.downloadPackets - prev.downloadPackets;
 		}
 		else
 		{
-			delta = currentStats;
+			delta = stats;
 		}
 
 		AccumulateBandwidth(processId, event.flowSnapshot, delta);
+
+		if (interfaceName.has_value())
+		{
+			AccumulateInterfaceBandwidth(*interfaceName, event.flowSnapshot, delta);
+		}
 
 		m_lastPersistedStats.erase(event.flowSnapshot.key);
 
@@ -476,5 +502,45 @@ namespace netscope::storage
 		}
 
 		return hostname;
+	}
+
+	void PersistenceService::AccumulateInterfaceBandwidth(const std::string& interfaceName, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta)
+	{
+		if (delta.uploadBytes == 0 && delta.downloadBytes == 0)
+		{
+			return;
+		}
+
+		auto now = ToUnixMilliseconds(snapshot.lastSeen);
+		int64_t hourStart = (now / 3600000) * 3600000;
+
+		auto res = m_interfaceBandwidthRepository.AccumulateHourly(interfaceName, hourStart, delta.uploadBytes, delta.downloadBytes, delta.uploadPackets, delta.downloadPackets);
+		if (!res)
+		{
+			LOG_WARN("Failed to accumulate interface bandwidth: {}", res.message);
+		}
+	}
+
+	std::optional<std::string> netscope::storage::PersistenceService::ResolveInterfaceName(const flow::FlowSnapshot& snapshot)
+	{
+		uint32_t ifindex = snapshot.ifindex;
+
+		if (ifindex == 0)
+		{
+			ifindex = m_interfaceResolver.ResolveRoute(snapshot.destination.address);
+		}
+
+		if (ifindex == 0)
+		{
+			return std::nullopt;
+		}
+
+		auto name = m_interfaceResolver.Resolve(ifindex);
+		if (name == "unknown")
+		{
+			return std::nullopt;
+		}
+
+		return name;
 	}
 }

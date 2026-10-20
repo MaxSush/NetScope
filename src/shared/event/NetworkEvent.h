@@ -33,5 +33,7 @@ namespace netscope
 
 		flow::IPAddress sourceAddress;
 		flow::IPAddress destinationAddress;
+
+		uint32_t ifindex = 0;			// 0 = unknown/unresolved
 	};
 }

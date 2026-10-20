@@ -41,6 +41,8 @@ struct bpf_network_event
 
     __u16 source_port;
     __u16 destination_port;
+
+    __u32 ifindex;
 };
 
 #endif

@@ -7,6 +7,8 @@
 #include <event/EventQueue.h>
 #include <cache/DnsCache.h>
 #include <resolver/RdnsResolver.h>
+#include <repository/InterfaceBandwidthRepository.h>
+#include <net/InterfaceResolver.h>
 
 #include <FlowHash.h>
 
@@ -75,6 +77,9 @@ namespace netscope::storage
 		const hostname::DnsCache& m_dnsCache;
 		hostname::RdnsResolver& m_rdnsResolver;
 
+		InterfaceBandwidthRepository m_interfaceBandwidthRepository;
+		InterfaceResolver m_interfaceResolver;
+
 	private:
 		void AccumulateBandwidth(int64_t processId, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta);
 
@@ -96,5 +101,8 @@ namespace netscope::storage
 		DatabaseResult Persist(const processing::ProcessClosedEvent& event);
 
 		std::optional<std::string> ResolveHostname(const flow::IPAddress& ip);
+
+		void AccumulateInterfaceBandwidth(const std::string& interfaceName, const flow::FlowSnapshot& snapshot, const flow::FlowStatistics& delta);
+		std::optional<std::string> ResolveInterfaceName(const flow::FlowSnapshot& snapshot);
 	};
 }

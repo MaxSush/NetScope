@@ -105,6 +105,8 @@ namespace netscope::storage
                 protocol         INTEGER NOT NULL
                     CHECK(protocol IN (6, 17)),
 
+				interface_name	 TEXT DEFAULT NULL,
+
                 local_address    TEXT NOT NULL,
                 local_port       INTEGER NOT NULL,
                 remote_address   TEXT NOT NULL,
@@ -184,6 +186,40 @@ namespace netscope::storage
 		result = db.Execute(BandwidthDailySql);
 		if (!result) return result;
 
+		// ── bandwidth_interface_hourly ──
+		constexpr auto BwIfaceHourlySql = R"sql(
+			CREATE TABLE IF NOT EXISTS bandwidth_interface_hourly (
+				id              INTEGER PRIMARY KEY AUTOINCREMENT,
+				interface_name  TEXT    NOT NULL,
+				hour_timestamp  INTEGER NOT NULL,
+				tx_bytes        INTEGER NOT NULL DEFAULT 0,
+				rx_bytes        INTEGER NOT NULL DEFAULT 0,
+				tx_packets      INTEGER NOT NULL DEFAULT 0,
+				rx_packets      INTEGER NOT NULL DEFAULT 0,
+				UNIQUE(interface_name, hour_timestamp)
+			);
+		)sql";
+
+		result = db.Execute(BwIfaceHourlySql);
+		if (!result) return result;
+		
+		// ── bandwidth_interface_daily ──
+		constexpr auto BwIfaceDailySql = R"sql(
+			CREATE TABLE IF NOT EXISTS bandwidth_interface_daily (
+				id              INTEGER PRIMARY KEY AUTOINCREMENT,
+				interface_name  TEXT    NOT NULL,
+				day_timestamp   INTEGER NOT NULL,
+				tx_bytes        INTEGER NOT NULL DEFAULT 0,
+				rx_bytes        INTEGER NOT NULL DEFAULT 0,
+				tx_packets      INTEGER NOT NULL DEFAULT 0,
+				rx_packets      INTEGER NOT NULL DEFAULT 0,
+				UNIQUE(interface_name, day_timestamp)
+			);
+		)sql";
+
+		result = db.Execute(BwIfaceDailySql);
+		if (!result) return result;
+
 		return DatabaseResult::Ok();
 	}
 
@@ -210,6 +246,12 @@ namespace netscope::storage
 
             CREATE INDEX IF NOT EXISTS idx_bandwidth_daily_time
                 ON bandwidth_daily(day_timestamp);
+
+			CREATE INDEX IF NOT EXISTS idx_bw_iface_hourly_time
+				ON bandwidth_interface_hourly(hour_timestamp);
+
+			CREATE INDEX IF NOT EXISTS idx_bw_iface_daily_time
+				ON bandwidth_interface_daily(day_timestamp);
 		)sql";
 
 		return db.Execute(IndexesSql);
@@ -221,6 +263,15 @@ namespace netscope::storage
             INSERT OR IGNORE INTO schema_version (version, description, applied_at)
             VALUES (1, 'Initial schema with process_id FK, CHECK constraints, bandwidth tables', strftime('%s','now') * 1000);
         )sql";
-		return db.Execute(InsertSql);
+		auto result = db.Execute(InsertSql);
+
+		constexpr auto InsertV2Sql = R"sql(
+			INSERT OR IGNORE INTO schema_version (version, description, applied_at)
+			VALUES (2, 'Interface monitoring: interface_name on flows, bandwidth_interface tables',
+					strftime('%s','now') * 1000);
+		)sql";
+		result = db.Execute(InsertV2Sql);
+
+		return result;
 	}
 }

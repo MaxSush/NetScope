@@ -23,7 +23,8 @@ namespace netscope::presentation
 			"IDLE",
 			"CLOSED",
 			"UPLOAD",
-			"DOWNLOAD");
+			"DOWNLOAD",
+			"INTERFACE");
 		std::cout << "------------------------------------------------------------------------------------------------------" << std::endl;
 
 		auto flows = m_flowManager.GetSnapshot();
@@ -33,14 +34,15 @@ namespace netscope::presentation
 		for (const auto& process : processes)
 		{
 			fmt::print(
-				"{:<8} {:<20} {:>8} {:>8} {:>8} {:>15} {:>15}\n",
+				"{:<8} {:<20} {:>8} {:>8} {:>8} {:>15} {:>15} {:>8}\n",
 				process.pid,
 				process.processName,
 				process.activeConnections,
 				process.idleConnections,
 				process.closeConnections,
 				ByteFormatter::Format(process.statistics.uploadBytes),
-				ByteFormatter::Format(process.statistics.downloadBytes)
+				ByteFormatter::Format(process.statistics.downloadBytes),
+				process.ifindex
 			);
 		}
 	}

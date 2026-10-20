@@ -28,6 +28,11 @@ namespace netscope::flow
 			m_snapshot.statistics.downloadPackets++;
 			m_snapshot.statistics.downloadBytes += event.bytes;
 		}
+
+		if (event.ifindex != 0)
+		{
+			m_snapshot.ifindex = event.ifindex;
+		}
 	}
 
 	pid_t Flow::GetPID() const

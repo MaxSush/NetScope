@@ -3,13 +3,15 @@ find_package(SQLite3 REQUIRED)
 add_library(NetScopeStorage STATIC
     "database/IDatabase.h"
     "database/SQLiteDatabase.cpp"
-  "database/SQLiteDatabase.h" "database/DatabaseResult.h" "schema/SchemaManager.h" "schema/SchemaManager.cpp"
-  "database/Statement.h" "database/Statement.cpp"  
-  "repository/ProcessRepository.h" "repository/IProcessRepository.h" "repository/ProcessRepository.cpp" 
-  "repository/IFlowRepository.h" "repository/FlowRepository.cpp" "repository/FlowRepository.h" 
-  "persistence/PersistenceService.h" "persistence/PersistenceService.cpp" 
-  "repository/AppStateRepository.h" "repository/AppStateRepository.cpp"
-  "repository/BandwidthRepository.cpp" "repository/BandwidthRepository.h"
+    "database/SQLiteDatabase.h" "database/DatabaseResult.h" "schema/SchemaManager.h" "schema/SchemaManager.cpp"
+    "database/Statement.h" "database/Statement.cpp"  
+    "repository/ProcessRepository.h" "repository/IProcessRepository.h" "repository/ProcessRepository.cpp" 
+    "repository/IFlowRepository.h" "repository/FlowRepository.cpp" "repository/FlowRepository.h" 
+    "persistence/PersistenceService.h" "persistence/PersistenceService.cpp" 
+    "repository/AppStateRepository.h" "repository/AppStateRepository.cpp"
+    "repository/BandwidthRepository.cpp" "repository/BandwidthRepository.h"
+    "net/InterfaceResolver.h" "net/InterfaceResolver.cpp"
+    "repository/InterfaceBandwidthRepository.h" "repository/InterfaceBandwidthRepository.cpp"
 )
 
 target_include_directories(NetScopeStorage
@@ -23,6 +25,7 @@ target_link_libraries(NetScopeStorage
 
     NetScopeShared
     NetscopeHostname
+    NetScopeFlow
 )
 
 target_compile_features(NetScopeStorage PUBLIC cxx_std_17)

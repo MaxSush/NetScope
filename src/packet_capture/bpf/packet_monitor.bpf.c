@@ -34,6 +34,28 @@ struct
 	__type(value, __u8);
 } tracked_pids SEC(".maps");
 
+/*
+ * Read the interface index from the socket's cached route.
+ * sk->sk_dst_cache points to a dst_entry whose dev field is
+ * the net_device the kernel resolved for this socket.
+ * Returns 0 if any pointer in the chain is NULL.
+*/
+static __always_inline __u32 read_sk_ifindex(struct sock* sk)
+{
+	struct dst_entry* dst = BPF_CORE_READ(sk, sk_dst_cache);
+	if (!dst)
+	{
+		return 0;
+	}
+
+	struct net_device* dev = BPF_CORE_READ(dst, dev);
+	if (!dev)
+	{
+		return 0;
+	}
+	return BPF_CORE_READ(dev, ifindex);
+}
+
 static __always_inline int emit_tcp_event(struct sock* sk, __u8 protocol, __u64 bytes, __u8 direction)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
@@ -60,8 +82,12 @@ static __always_inline int emit_tcp_event(struct sock* sk, __u8 protocol, __u64 
 	{
 		event->source.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
 		event->destination.ipv4 = BPF_CORE_READ(sk, __sk_common.skc_daddr);
-		if ((event->source.ipv4 & 0xFF) == 0x7F ||
-			(event->destination.ipv4 & 0xFF) == 0x7F)
+		if ((event->source.ipv4 & 0xFF) == 0x7F || (event->destination.ipv4 & 0xFF) == 0x7F)
+		{
+			bpf_ringbuf_discard(event, 0);
+			return 0;
+		}
+		if (event->source.ipv4 == 0 && event->destination.ipv4 == 0)
 		{
 			bpf_ringbuf_discard(event, 0);
 			return 0;
@@ -74,9 +100,11 @@ static __always_inline int emit_tcp_event(struct sock* sk, __u8 protocol, __u64 
 		__builtin_memcpy(event->source.ipv6, &saddr, 16);
 		__builtin_memcpy(event->destination.ipv6, &daddr, 16);
 	}
-
+	
 	event->source_port = BPF_CORE_READ(sk, __sk_common.skc_num);
 	event->destination_port = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+
+	event->ifindex = read_sk_ifindex(sk);
 
 	bpf_ringbuf_submit(event, 0);
 
@@ -95,7 +123,6 @@ int BPF_PROG(trace_recv, struct sock* sk, struct sk_buff* skb, int offset, struc
 	if (ret <= 0) {
 		return 0;
 	}
-
 	return emit_tcp_event(sk, IPPROTO_TCP, (__u64)ret, DIRECTION_IN);
 }
 
@@ -135,6 +162,17 @@ static __always_inline int emit_udp_event(struct sock* sk, struct msghdr* msg, _
 				event->destination_port = bpf_ntohs(BPF_CORE_READ(sin, sin_port));
 			}
 		}
+
+		if ((event->source.ipv4 & 0xFF) == 0x7F || (event->destination.ipv4 & 0xFF) == 0x7F)
+		{
+			bpf_ringbuf_discard(event, 0);
+			return 0;
+		}
+		if (event->source.ipv4 == 0 && event->destination.ipv4 == 0)
+		{
+			bpf_ringbuf_discard(event, 0);
+			return 0;
+		}
 	}
 	else if (event->family == AF_INET6)
 	{
@@ -144,13 +182,7 @@ static __always_inline int emit_udp_event(struct sock* sk, struct msghdr* msg, _
 		__builtin_memcpy(event->destination.ipv6, &daddr, 16);
 	}
 
-	if (event->family == AF_INET &&
-		((event->source.ipv4 & 0xFF) == 0x7F ||
-			(event->destination.ipv4 & 0xFF) == 0x7F))
-	{
-		bpf_ringbuf_discard(event, 0);
-		return 0;
-	}
+	event->ifindex = read_sk_ifindex(sk);
 
 	bpf_ringbuf_submit(event, 0);
 	return 0;
@@ -223,6 +255,7 @@ int BPF_PROG(trace_set_state, struct sock* sk, int state)
 
 	event->data.close.err = err;
 	event->data.close.shutdown_mask = shutdown;
+	event->ifindex = read_sk_ifindex(sk);
 
 	bpf_ringbuf_submit(event, 0);
 	return 0;
@@ -259,6 +292,7 @@ int BPF_PROG(trace_process_exit, struct task_struct* task)
 	event->family = 0;
 	event->source_port = 0;
 	event->destination_port = 0;
+	event->ifindex = 0;
 
 	bpf_ringbuf_submit(event, 0);
 

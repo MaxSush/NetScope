@@ -20,6 +20,7 @@ namespace netscope::flow
 			protocol = event.protocol;
 			pid = event.pid;
 			terminationInfo = event.close;
+			ifindex = event.ifindex;
 		}
 
 		FlowKey key;
@@ -40,6 +41,8 @@ namespace netscope::flow
 		FlowState state = FlowState::ACTIVE;
 
 		FlowTerminationInfo terminationInfo{};
+
+		uint32_t ifindex = 0;
 
 		inline bool IsIdle(Duration timeout) const
 		{

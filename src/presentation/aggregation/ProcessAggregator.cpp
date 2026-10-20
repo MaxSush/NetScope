@@ -46,6 +46,8 @@ namespace netscope
 			{
 				++process.activeConnections;
 			}
+
+			process.ifindex = flow.ifindex;
 		}
 
 		std::vector<flow::ProcessView> result;
